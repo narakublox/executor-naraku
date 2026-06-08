@@ -1254,38 +1254,54 @@ task.spawn(function()
     end
 end)
 
--- Rejoin Server (100% Server Yang Sama + Bypass Error 267)
-ServerTab:Button({
-    Title = "REJOIN SERVER",
-    Desc = "Masuk ulang ke server yang sama",
-    Callback = function()
-        -- 1. Beri Notifikasi ke Layar Player menggunakan sistem bawaan Roblox (Anti-Error)
-        pcall(function()
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "REJOIN",
-                Text = "Menghubungkan ulang ke server yang sama...",
-                Duration = 3
-            })
-        end)
-        
-        -- 2. Jalankan proses secara asynchronous di background
+-- =============================================================================
+-- LOGIKA CLEAN REJOIN SYSTEM (100% SERVER YANG SAMA - ANTI KICK BYPASS)
+-- =============================================================================
+if RejoinBtn then
+    RejoinBtn.MouseButton1Click:Connect(function()
         task.spawn(function()
-            -- Jeda pengaman ultra-stabil untuk bypass proteksi ketat anti-cheat game (Error 267)
+            -- 1. Notifikasi awal ke player pakai sistem bawaan Roblox (Anti-Error / Nil Value)
+            pcall(function()
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "NARAKU REJOIN",
+                    Text = "Menghubungkan ulang ke server yang sama...",
+                    Duration = 3
+                })
+            end)
+
+            -- 2. Jeda pengaman ultra-stabil untuk bypass proteksi ketat anti-cheat game (Error 267)
             task.wait(0.5)
             
-            -- Ambil data TeleportService secara aman
-            local TeleportService = game:GetService("TeleportService")
+            -- DEFINISI SERVICE (Memastikan service terpanggil dengan aman tanpa rely pada global variable)
+            local TS = game:GetService("TeleportService")
+            local LP = game:GetService("Players").LocalPlayer
             
+            -- 3. Setup TeleportOptions modern untuk mengunci Server Instance ID saat ini
+            local teleportOptions = Instance.new("TeleportOptions")
             if game.JobId ~= "" then
-                -- Mengunci dan memaksa masuk kembali ke server instance yang sekarang
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-            else
-                -- Fallback jika JobId kosong (kembali ke server dasar)
-                TeleportService:Teleport(game.PlaceId, LocalPlayer)
+                teleportOptions.ServerInstanceId = game.JobId
+            end
+            
+            -- 4. Eksekusi Utama: Teleport secara Async (Metode paling mulus saat ini)
+            local success, err = pcall(function()
+                TS:TeleportAsync(game.PlaceId, {LP}, teleportOptions)
+            end)
+            
+            -- 5. Mekanisme Darurat (Fallback): Jika TeleportAsync diblokir/gagal, pakai metode cadangan
+            if not success then
+                warn("TeleportAsync Gagal, Menjalankan Metode Cadangan:", err)
+                pcall(function()
+                    if game.JobId ~= "" then
+                        TS:TeleportToPlaceInstance(game.PlaceId, game.JobId, LP)
+                    else
+                        TS:Teleport(game.PlaceId, LP)
+                    end
+                end)
             end
         end)
-    end
-})
+    end)
+end
+
 -- =============================================================================
 -- [PANEL MENU 2]: TEXTBOX SCRIPT EDITOR ADVANCED (DENGAN LOGIKA AUTO-PLACEHOLDER)
 -- =============================================================================
