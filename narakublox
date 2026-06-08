@@ -1255,19 +1255,25 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- LOGIKA CLEAN REJOIN SYSTEM (LONG DELAY KICK BYPASS - 100% AMAN DARI KICK)
+-- LOGIKA CLEAN REJOIN SYSTEM (FORMAT UPDATE)
 -- =============================================================================
+
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = Players.LocalPlayer
+
 if RejoinBtn then
     RejoinBtn.MouseButton1Click:Connect(function()
         task.spawn(function()
-            -- 1. Tendang diri lu secara lokal biar anti-cheat server lama gak bisa nge-track lu lagi
-            LocalPlayer:Kick("\n[NARAKU HUB,JANGAN KLIK KELUAR TUNGGU AJA]\nSedang memproses server baru...\nMohon tunggu sekitar 4 detik agar bypass aman...")
+            -- 1. Format pesan kick diubah menjadi Description Info sesuai permintaan
+            local kickMessage = "\n[NARAKU HUB]\nTUNGGU 4 DTK, JANGAN DI KLIK KELUAR"
             
-            -- 2. KASIH JEDAA AGAK LAMA (4 DETIK)
-            -- Waktu ini sangat cukup buat Roblox ngebersihin cache dan nyari server publik baru
+            LocalPlayer:Kick(kickMessage)
+            
+            -- 2. Jeda waktu 4 detik untuk pembersihan cache rbx
             task.wait(4.0)
             
-            -- 3. Eksekusi masuk ke server baru yang berbeda
+            -- 3. Proses pemindahan ke server baru
             pcall(function()
                 TeleportService:Teleport(game.PlaceId, LocalPlayer)
             end)
