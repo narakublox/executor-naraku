@@ -1255,27 +1255,33 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- LOGIKA CLEAN REJOIN SYSTEM (FORMAT UPDATE)
+-- LOGIKA REJOIN SAME SERVER + NOTIFIKASI BAWAAN ROBLOX (100% CLEAN)
 -- =============================================================================
 
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
+local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 
 if RejoinBtn then
     RejoinBtn.MouseButton1Click:Connect(function()
         task.spawn(function()
-            -- 1. Format pesan kick diubah menjadi Description Info sesuai permintaan
-            local kickMessage = "\n[NARAKU HUB]\nTUNGGU 4 DTK, JANGAN DI KLIK KELUAR"
+            -- 1. MEMUNCULKAN NOTIFIKASI BAWAAN ROBLOX (STARTERGUI)
+            pcall(function()
+                StarterGui:SetCore("SendNotification", {
+                    Title = "[NARAKU BLOX]",
+                    Text = "Sedang memproses rejoin... Mohon tunggu 4 detik.",
+                    Icon = "rbxassetid://0", -- Bisa diganti ID Asset Icon lu jika ada
+                    Duration = 4 -- Notifikasi muncul selama 4 detik mengikuti jeda
+                })
+            end)
             
-            LocalPlayer:Kick(kickMessage)
-            
-            -- 2. Jeda waktu 4 detik untuk pembersihan cache rbx
+            -- 2. KASIH JEDA 4 DETIK TERLEBIH DAHULU
             task.wait(4.0)
             
-            -- 3. Proses pemindahan ke server baru
+            -- 3. EKSEKUSI TELEPORT KEMBALI KE SERVER YANG SAMA PERSIS
             pcall(function()
-                TeleportService:Teleport(game.PlaceId, LocalPlayer)
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
             end)
         end)
     end)
