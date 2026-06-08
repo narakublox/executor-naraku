@@ -1024,46 +1024,12 @@ local Menu2Scroll    = LMG2L["ScrollingFrame_58"] -- ScrollingFrame PanelMenu2
 local Menu2Execute   = LMG2L["ExecuteButton_4b"]  -- Tombol Execute (PanelMenu2)
 local Menu2Clear     = LMG2L["ClearButton_53"]    -- Tombol Clear (PanelMenu2)
 
--- =============================================================================
--- INISIALISASI & PROTEKSI PROPERTI TEXTBOX PANEL MAIN 1
--- =============================================================================
-if InputTitle then
-    InputTitle.ClearTextOnFocus = false
-    InputTitle.Text = "Enter Your Title..."
-    
-    InputTitle.Focused:Connect(function()
-        if InputTitle.Text == "Enter Your Title..." then
-            InputTitle.Text = ""
-        end
-    end)
-    
-    InputTitle.FocusLost:Connect(function()
-        local cleanText = InputTitle.Text:gsub("^%s*(.-)%s*$", "%1")
-        if cleanText == "" then
-            InputTitle.Text = "Enter Your Title..."
-        end
-    end)
-end
-
+-- Fix & Kunci Keamanan TextBox Script Box PanelMain1 Supaya Tidak Keluar Jalur
 if InputScript then
     InputScript.TextWrapped = true
     InputScript.ClearTextOnFocus = false
     InputScript.MultiLine = true
     InputScript.ClipsDescendants = true
-    InputScript.Text = "-- Enter Your Script..."
-    
-    InputScript.Focused:Connect(function()
-        if InputScript.Text == "-- Enter Your Script..." then
-            InputScript.Text = ""
-        end
-    end)
-    
-    InputScript.FocusLost:Connect(function()
-        local cleanText = InputScript.Text:gsub("^%s*(.-)%s*$", "%1")
-        if cleanText == "" then
-            InputScript.Text = "-- Enter Your Script..."
-        end
-    end)
 end
 
 -- Setel Padding UIListLayout Bawaan Tanpa Merusak Komponen Lain
