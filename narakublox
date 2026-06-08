@@ -1255,57 +1255,21 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- LOGIKA CLEAN REJOIN SYSTEM (HTTP SERVER LIST BYPASS - ANTI KICK 100%)
+-- LOGIKA CLEAN REJOIN SYSTEM (PINDAH SERVER BARU / ACAK - 100% AMAN DARI KICK)
 -- =============================================================================
 if RejoinBtn then
     RejoinBtn.MouseButton1Click:Connect(function()
         task.spawn(function()
-            -- Jeda tipis biar client gak overload saat request API Roblox
-            task.wait(0.3)
+            -- Jeda 0.5 detik biar engine game siap-siap mutus koneksi server lama
+            task.wait(0.5)
             
-            -- Jalankan bypass pencarian server via API Roblox Http
-            local successBypass, errBypass = pcall(function()
-                local HttpService = game:GetService("HttpService")
-                local currentJobId = game.JobId
-                
-                -- Ambil list server aktif dari API resmi Roblox
-                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-                local serverList = HttpService:JSONDecode(game:HttpGet(url))
-                
-                local targetServerFound = false
-                
-                if serverList and serverList.data then
-                    for _, server in ipairs(serverList.data) do
-                        -- Validasi: Cari server ID yang persis sama dengan server lu sekarang
-                        if tostring(server.id) == tostring(currentJobId) then
-                            targetServerFound = true
-                            -- Masuk lewat jalur join instance normal (Anti-Cheat Bypass)
-                            TeleportService:TeleportToPlaceInstance(game.PlaceId, currentJobId, LocalPlayer)
-                            break
-                        end
-                    end
-                end
-                
-                -- Fallback Luar: Jika JobId tidak ditemukan atau server penuh, lempar pake Teleport biasa
-                if not targetServerFound then
-                    if currentJobId ~= "" then
-                        TeleportService:TeleportToPlaceInstance(game.PlaceId, currentJobId, LocalPlayer)
-                    else
-                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
-                    end
-                end
+            -- Eksekusi Teleport biasa tanpa ngunci JobId = Roblox otomatis cari Server Baru yang aktif
+            local success, err = pcall(function()
+                TeleportService:Teleport(game.PlaceId, LocalPlayer)
             end)
             
-            -- Jaga-jaga kalau executor lu gak support HttpService/HttpGet, pake cara cadangan utama lu
-            if not successBypass then
-                warn("Http Bypass Failed, Menggunakan Jalur Cadangan:", errBypass)
-                pcall(function()
-                    if game.JobId ~= "" then
-                        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-                    else
-                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
-                    end
-                end)
+            if not success then
+                warn("Gagal pindah server:", err)
             end
         end)
     end)
