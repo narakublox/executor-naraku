@@ -1269,10 +1269,10 @@ if RejoinBtn then
             -- 1. MEMUNCULKAN NOTIFIKASI BAWAAN ROBLOX (STARTERGUI)
             pcall(function()
                 StarterGui:SetCore("SendNotification", {
-                    Title = "[NARAKU BLOX]",
-                    Text = "Proses rejoin... Mohon tunggu 5 detik.",
+                    Title = "NARAKU BLOX",
+                    Text = "Rejoin server... Mohon tunggu 7 detik.",
                     Icon = "rbxassetid://85521644284429", -- Bisa diganti ID Asset Icon lu jika ada
-                    Duration = 5 -- Notifikasi muncul selama 4 detik mengikuti jeda
+                    Duration = 7 -- Notifikasi muncul selama 7 detik mengikuti jeda
                 })
             end)
             
