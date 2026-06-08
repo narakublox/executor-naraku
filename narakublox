@@ -992,7 +992,7 @@ task.spawn(function()
     end
 end)
 
-print("SYSTEM MAIN PANEL: NARAKU BLOX BETA SCRIPT SUKSES!")
+print("NARAKU BLOX BETA SCRIPT SUKSES!")
 -- =============================================================================
 
 -- =============================================================================
@@ -1270,9 +1270,9 @@ if RejoinBtn then
             pcall(function()
                 StarterGui:SetCore("SendNotification", {
                     Title = "[NARAKU BLOX]",
-                    Text = "Sedang memproses rejoin... Mohon tunggu 4 detik.",
-                    Icon = "rbxassetid://0", -- Bisa diganti ID Asset Icon lu jika ada
-                    Duration = 4 -- Notifikasi muncul selama 4 detik mengikuti jeda
+                    Text = "Proses rejoin... Mohon tunggu 5 detik.",
+                    Icon = "rbxassetid://85521644284429", -- Bisa diganti ID Asset Icon lu jika ada
+                    Duration = 5 -- Notifikasi muncul selama 4 detik mengikuti jeda
                 })
             end)
             
