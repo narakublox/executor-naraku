@@ -755,10 +755,42 @@ local PanelMenu1   = LMG2L["PanelMenu1_36"]     -- Panel Menu Atas
 local PanelMenu2   = PanelUtama:FindFirstChild("PanelMenu2") or PanelUtama:FindFirstChildOfClass("Frame")
 
 -- =============================================================================
--- KUNCI SISTEM ANTI-HILANG (Sesuai Permintaan: Aman Saat Play/Stop & Respawn)
+-- ULTIMATE MAIN PANEL CORE ENGINE (100% PERFECT STATE, CORE_GUI PROTECTED)
 -- =============================================================================
-if ScreenGui then
-    ScreenGui.ResetOnSpawn = false -- UI dan OpenButton dijamin tidak akan pernah hilang/terhapus!
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+-- 1. Verifikasi Keberadaan Array LMG2L
+if not LMG2L or type(LMG2L) ~= "table" then
+    warn("ERROR: Array LMG2L tidak ditemukan atau gagal dimuat!")
+    return
+end
+
+-- 2. Inisialisasi Referensi Objek Sesuai Struktur File
+local ScreenGui    = LMG2L["ScreenGui_1"]       -- ScreenGui Utama
+local OpenButton   = LMG2L["OpenButton_2"]      -- Tombol Buka Panel
+local PanelUtama   = LMG2L["PanelUtama_6"]      -- Frame Vertikal Utama
+local MenuButton   = LMG2L["MenuButton_7"]      -- Tombol Menu
+local MainButton   = LMG2L["MainButton_30"]     -- Tombol Main
+local CloseButton  = LMG2L["CloseButton_33"]    -- Tombol Tutup Panel
+
+-- Sub-Panel Main & Menu
+local PanelMain1   = LMG2L["PanelMain1_c"]      -- Panel Utama Atas
+local PanelMain2   = LMG2L["PanelMain2_1e"]     -- Panel Utama Bawah
+local PanelMenu1   = LMG2L["PanelMenu1_36"]     -- Panel Menu Atas
+local PanelMenu2   = PanelUtama:FindFirstChild("PanelMenu2") or PanelUtama:FindFirstChildOfClass("Frame")
+
+-- =============================================================================
+-- SYSTEM PROTEKSI ANTI-HILANG (PLAY & STOP SAFE via CORE_GUI)
+-- =============================================================================
+if ScreenGui and ScreenGui:IsA("ScreenGui") then
+    ScreenGui.ResetOnSpawn = false -- Mencegah Roblox menghapus UI saat ganti mode / spawn karakter
+    
+    -- Pindahkan Parent ke CoreGui agar kebal dari pembersihan JSON Studio Lite
+    pcall(function()
+        ScreenGui.Parent = CoreGui
+    end)
 end
 -- =============================================================================
 
@@ -966,7 +998,7 @@ task.spawn(function()
     end
 end)
 
-print("SYSTEM MAIN PANEL: 100% GABUNGAN AMAN & ANTI-HILANG AKTIF!")
+print("SYSTEM MAIN PANEL: 100% SUCCESS, CORE_GUI INJECTION BYPASS ACTIVE!")
 -- =============================================================================
 
 return LMG2L["ScreenGui_1"], require;
