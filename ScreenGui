@@ -729,14 +729,14 @@ LMG2L["ScriptBox_5a"]["Text"] = [[print('Hello World')]];
 LMG2L["ScriptBox_5a"]["BackgroundTransparency"] = 1;
 
 -- =============================================================================
--- ULTIMATE MAIN PANEL CORE ENGINE (100% PERFECT STATE, STROKE ROTATION & BUTTON SHINE)
+-- ULTIMATE MAIN PANEL CORE ENGINE (100% PERFECT STATE, PROTECTED & ANTI-RESET)
 -- =============================================================================
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 -- 1. Verifikasi Keberadaan Array LMG2L
 if not LMG2L or type(LMG2L) ~= "table" then
-    warn("ERROR: Executor Naraku Blox gagal dimuat!")
+    warn("ERROR: Array LMG2L tidak ditemukan atau gagal dimuat!")
     return
 end
 
@@ -753,6 +753,14 @@ local PanelMain1   = LMG2L["PanelMain1_c"]      -- Panel Utama Atas
 local PanelMain2   = LMG2L["PanelMain2_1e"]     -- Panel Utama Bawah
 local PanelMenu1   = LMG2L["PanelMenu1_36"]     -- Panel Menu Atas
 local PanelMenu2   = PanelUtama:FindFirstChild("PanelMenu2") or PanelUtama:FindFirstChildOfClass("Frame")
+
+-- =============================================================================
+-- KUNCI SISTEM ANTI-HILANG (Sesuai Permintaan: Aman Saat Play/Stop & Respawn)
+-- =============================================================================
+if ScreenGui then
+    ScreenGui.ResetOnSpawn = false -- UI dan OpenButton dijamin tidak akan pernah hilang/terhapus!
+end
+-- =============================================================================
 
 -- 3. Simpan Warna Default/Asli Tombol untuk Navigasi Status Warna (Tab State)
 local originalMainColor = MainButton.BackgroundColor3
@@ -918,7 +926,6 @@ local function classifyGradients(object)
                 -- 2. Jika berada langsung di dalam Tombol -> Jalankan Efek Mengkilap (Shine)
                 table.insert(buttonShineGradients, desc)
             end
-            -- 3. Jika di dalam Frame biasa (Garis Latar Belakang), otomatis diabaikan (Static)
         end
     end
 end
@@ -959,7 +966,7 @@ task.spawn(function()
     end
 end)
 
-print("EXECUTOR NARAKU BLOX BETA")
+print("SYSTEM MAIN PANEL: 100% GABUNGAN AMAN & ANTI-HILANG AKTIF!")
 -- =============================================================================
 
 return LMG2L["ScreenGui_1"], require;
