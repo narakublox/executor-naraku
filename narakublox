@@ -1255,7 +1255,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- LOGIKA REJOIN SAME SERVER + NOTIFIKASI BAWAAN ROBLOX (100% CLEAN)
+-- LOGIKA REJOIN SAME SERVER + NOTIFIKASI BAWAAN ROBLOX (100% FIXED & SYNCED)
 -- =============================================================================
 
 local Players = game:GetService("Players")
@@ -1271,13 +1271,13 @@ if RejoinBtn then
                 StarterGui:SetCore("SendNotification", {
                     Title = "NARAKU BLOX",
                     Text = "Rejoin server... Mohon tunggu 7 detik.",
-                    Icon = "rbxassetid://85521644284429", -- Bisa diganti ID Asset Icon lu jika ada
-                    Duration = 7 -- Notifikasi muncul selama 7 detik mengikuti jeda
+                    Icon = "rbxassetid://85521644284429", -- Icon bawaan lu tetap aman
+                    Duration = 7 -- Notifikasi muncul pas 7 detik
                 })
             end)
             
-            -- 2. KASIH JEDA 4 DETIK TERLEBIH DAHULU
-            task.wait(4.0)
+            -- 2. JEDA AMAN 7 DETIK (DI-FIX: SEKARANG SINKRON SAMA TEKS DI ATAS)
+            task.wait(7.0)
             
             -- 3. EKSEKUSI TELEPORT KEMBALI KE SERVER YANG SAMA PERSIS
             pcall(function()
