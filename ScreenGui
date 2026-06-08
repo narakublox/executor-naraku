@@ -1,0 +1,733 @@
+-- NARAKU BLOX 
+local LMG2L = {};
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui
+LMG2L["ScreenGui_1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
+LMG2L["ScreenGui_1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.OpenButton
+LMG2L["OpenButton_2"] = Instance.new("ImageButton", LMG2L["ScreenGui_1"]);
+LMG2L["OpenButton_2"]["BorderSizePixel"] = 0;
+-- LMG2L["OpenButton_2"]["ImageContent"] = ;
+LMG2L["OpenButton_2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["OpenButton_2"]["Image"] = [[rbxassetid://85521644284429]];
+LMG2L["OpenButton_2"]["Size"] = UDim2.new(0, 35, 0, 35);
+LMG2L["OpenButton_2"]["Name"] = [[OpenButton]];
+LMG2L["OpenButton_2"]["Position"] = UDim2.new(1, -40, 0, -40);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.OpenButton.UICorner
+LMG2L["UICorner_3"] = Instance.new("UICorner", LMG2L["OpenButton_2"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.OpenButton.UIStroke
+LMG2L["UIStroke_4"] = Instance.new("UIStroke", LMG2L["OpenButton_2"]);
+LMG2L["UIStroke_4"]["Color"] = Color3.fromRGB(253, 253, 253);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.OpenButton.UIStroke.UIGradient
+LMG2L["UIGradient_5"] = Instance.new("UIGradient", LMG2L["UIStroke_4"]);
+LMG2L["UIGradient_5"]["Rotation"] = 15;
+LMG2L["UIGradient_5"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.439, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama
+LMG2L["PanelUtama_6"] = Instance.new("Frame", LMG2L["ScreenGui_1"]);
+LMG2L["PanelUtama_6"]["BorderSizePixel"] = 0;
+LMG2L["PanelUtama_6"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["PanelUtama_6"]["Size"] = UDim2.new(0, 40, 0, 320);
+LMG2L["PanelUtama_6"]["Position"] = UDim2.new(1, -43, 0, 10);
+LMG2L["PanelUtama_6"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["PanelUtama_6"]["Name"] = [[PanelUtama]];
+LMG2L["PanelUtama_6"]["BackgroundTransparency"] = 0.2;
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.MenuButton
+LMG2L["MenuButton_7"] = Instance.new("TextButton", LMG2L["PanelUtama_6"]);
+LMG2L["MenuButton_7"]["BorderSizePixel"] = 0;
+LMG2L["MenuButton_7"]["BackgroundColor3"] = Color3.fromRGB(48, 48, 48);
+LMG2L["MenuButton_7"]["BackgroundTransparency"] = 1;
+LMG2L["MenuButton_7"]["Size"] = UDim2.new(0, 30, 0, 30);
+LMG2L["MenuButton_7"]["Text"] = [[]];
+LMG2L["MenuButton_7"]["Name"] = [[MenuButton]];
+LMG2L["MenuButton_7"]["Position"] = UDim2.new(0, 5, 0, 5);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.MenuButton.UICorner
+LMG2L["UICorner_8"] = Instance.new("UICorner", LMG2L["MenuButton_7"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.MenuButton.IconMenu
+LMG2L["IconMenu_9"] = Instance.new("ImageLabel", LMG2L["MenuButton_7"]);
+LMG2L["IconMenu_9"]["BorderSizePixel"] = 0;
+LMG2L["IconMenu_9"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+-- LMG2L["IconMenu_9"]["ImageContent"] = ;
+LMG2L["IconMenu_9"]["Image"] = [[rbxassetid://13060262529]];
+LMG2L["IconMenu_9"]["Size"] = UDim2.new(0, 22, 0, 22);
+LMG2L["IconMenu_9"]["BackgroundTransparency"] = 1;
+LMG2L["IconMenu_9"]["Name"] = [[IconMenu]];
+LMG2L["IconMenu_9"]["Position"] = UDim2.new(0, 4, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.UIStroke
+LMG2L["UIStroke_a"] = Instance.new("UIStroke", LMG2L["PanelUtama_6"]);
+LMG2L["UIStroke_a"]["Color"] = Color3.fromRGB(253, 253, 253);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.UIStroke.UIGradient
+LMG2L["UIGradient_b"] = Instance.new("UIGradient", LMG2L["UIStroke_a"]);
+LMG2L["UIGradient_b"]["Rotation"] = 15;
+LMG2L["UIGradient_b"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.439, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1
+LMG2L["PanelMain1_c"] = Instance.new("Frame", LMG2L["PanelUtama_6"]);
+LMG2L["PanelMain1_c"]["BorderSizePixel"] = 0;
+LMG2L["PanelMain1_c"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["PanelMain1_c"]["Size"] = UDim2.new(0, 364, 0, 110);
+LMG2L["PanelMain1_c"]["Position"] = UDim2.new(0, -372, 0, 0);
+LMG2L["PanelMain1_c"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["PanelMain1_c"]["Name"] = [[PanelMain1]];
+LMG2L["PanelMain1_c"]["BackgroundTransparency"] = 0.2;
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Script
+LMG2L["Script_d"] = Instance.new("TextLabel", LMG2L["PanelMain1_c"]);
+LMG2L["Script_d"]["BorderSizePixel"] = 0;
+LMG2L["Script_d"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["Script_d"]["TextYAlignment"] = Enum.TextYAlignment.Top;
+LMG2L["Script_d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Script_d"]["Size"] = UDim2.new(0, 352, 0, 50);
+LMG2L["Script_d"]["Text"] = [[   SCRIPT]];
+LMG2L["Script_d"]["Name"] = [[Script]];
+LMG2L["Script_d"]["Position"] = UDim2.new(0, 6, 0, 52);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Script.UICorner
+LMG2L["UICorner_e"] = Instance.new("UICorner", LMG2L["Script_d"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Script.ScriptBox
+LMG2L["ScriptBox_f"] = Instance.new("TextBox", LMG2L["Script_d"]);
+LMG2L["ScriptBox_f"]["Name"] = [[ScriptBox]];
+LMG2L["ScriptBox_f"]["BorderSizePixel"] = 0;
+LMG2L["ScriptBox_f"]["TextSize"] = 12;
+LMG2L["ScriptBox_f"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["ScriptBox_f"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["ScriptBox_f"]["FontFace"] = Font.new([[rbxasset://fonts/families/Inconsolata.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+LMG2L["ScriptBox_f"]["Size"] = UDim2.new(0, 344, 0, 34);
+LMG2L["ScriptBox_f"]["Position"] = UDim2.new(0, 4, 0, 12);
+LMG2L["ScriptBox_f"]["Text"] = [[-- Enter Your Script...]];
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Script.ScriptBox.UICorner
+LMG2L["UICorner_10"] = Instance.new("UICorner", LMG2L["ScriptBox_f"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Script.UIGradient
+LMG2L["UIGradient_11"] = Instance.new("UIGradient", LMG2L["Script_d"]);
+LMG2L["UIGradient_11"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(142, 142, 142)),ColorSequenceKeypoint.new(0.602, Color3.fromRGB(247, 247, 247)),ColorSequenceKeypoint.new(0.843, Color3.fromRGB(148, 148, 148)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(148, 148, 148))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.UICorner
+LMG2L["UICorner_12"] = Instance.new("UICorner", LMG2L["PanelMain1_c"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.SaveButton
+LMG2L["SaveButton_13"] = Instance.new("TextButton", LMG2L["PanelMain1_c"]);
+LMG2L["SaveButton_13"]["BorderSizePixel"] = 0;
+LMG2L["SaveButton_13"]["TextSize"] = 10;
+LMG2L["SaveButton_13"]["BackgroundColor3"] = Color3.fromRGB(230, 250, 255);
+LMG2L["SaveButton_13"]["FontFace"] = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+LMG2L["SaveButton_13"]["Size"] = UDim2.new(0, 72, 0, 24);
+LMG2L["SaveButton_13"]["Text"] = [[ADD SCRIPT]];
+LMG2L["SaveButton_13"]["Name"] = [[SaveButton]];
+LMG2L["SaveButton_13"]["Position"] = UDim2.new(0, 286, 0, 24);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.SaveButton.UICorner
+LMG2L["UICorner_14"] = Instance.new("UICorner", LMG2L["SaveButton_13"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.SaveButton.UIGradient
+LMG2L["UIGradient_15"] = Instance.new("UIGradient", LMG2L["SaveButton_13"]);
+LMG2L["UIGradient_15"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(107, 107, 107)),ColorSequenceKeypoint.new(0.524, Color3.fromRGB(243, 243, 243)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(95, 95, 95))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Title
+LMG2L["Title_16"] = Instance.new("TextLabel", LMG2L["PanelMain1_c"]);
+LMG2L["Title_16"]["BorderSizePixel"] = 0;
+LMG2L["Title_16"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["Title_16"]["TextYAlignment"] = Enum.TextYAlignment.Top;
+LMG2L["Title_16"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Title_16"]["Size"] = UDim2.new(0, 276, 0, 40);
+LMG2L["Title_16"]["Text"] = [[  TITLE]];
+LMG2L["Title_16"]["Name"] = [[Title]];
+LMG2L["Title_16"]["Position"] = UDim2.new(0, 6, 0, 8);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Title.UICorner
+LMG2L["UICorner_17"] = Instance.new("UICorner", LMG2L["Title_16"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Title.ScriptBox
+LMG2L["ScriptBox_18"] = Instance.new("TextBox", LMG2L["Title_16"]);
+LMG2L["ScriptBox_18"]["Name"] = [[ScriptBox]];
+LMG2L["ScriptBox_18"]["BorderSizePixel"] = 0;
+LMG2L["ScriptBox_18"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["ScriptBox_18"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["ScriptBox_18"]["Size"] = UDim2.new(0, 268, 0, 24);
+LMG2L["ScriptBox_18"]["Position"] = UDim2.new(0, 4, 0, 12);
+LMG2L["ScriptBox_18"]["Text"] = [[Enter Your Title...]];
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Title.ScriptBox.UICorner
+LMG2L["UICorner_19"] = Instance.new("UICorner", LMG2L["ScriptBox_18"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Title.UIGradient
+LMG2L["UIGradient_1a"] = Instance.new("UIGradient", LMG2L["Title_16"]);
+LMG2L["UIGradient_1a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(142, 142, 142)),ColorSequenceKeypoint.new(0.602, Color3.fromRGB(247, 247, 247)),ColorSequenceKeypoint.new(0.843, Color3.fromRGB(148, 148, 148)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(148, 148, 148))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.Title
+LMG2L["Title_1b"] = Instance.new("TextLabel", LMG2L["PanelMain1_c"]);
+LMG2L["Title_1b"]["BorderSizePixel"] = 0;
+LMG2L["Title_1b"]["TextSize"] = 12;
+LMG2L["Title_1b"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["Title_1b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Title_1b"]["FontFace"] = Font.new([[rbxasset://fonts/families/Sarpanch.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+LMG2L["Title_1b"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Title_1b"]["BackgroundTransparency"] = 1;
+LMG2L["Title_1b"]["Size"] = UDim2.new(0, 72, 0, 22);
+LMG2L["Title_1b"]["Text"] = [[UPLOAD SCRIPT ]];
+LMG2L["Title_1b"]["Name"] = [[Title]];
+LMG2L["Title_1b"]["Position"] = UDim2.new(0, 287, 0, 2);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.UIStroke
+LMG2L["UIStroke_1c"] = Instance.new("UIStroke", LMG2L["PanelMain1_c"]);
+LMG2L["UIStroke_1c"]["Color"] = Color3.fromRGB(253, 253, 253);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain1.UIStroke.UIGradient
+LMG2L["UIGradient_1d"] = Instance.new("UIGradient", LMG2L["UIStroke_1c"]);
+LMG2L["UIGradient_1d"]["Rotation"] = 45;
+LMG2L["UIGradient_1d"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.439, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2
+LMG2L["PanelMain2_1e"] = Instance.new("Frame", LMG2L["PanelUtama_6"]);
+LMG2L["PanelMain2_1e"]["BorderSizePixel"] = 0;
+LMG2L["PanelMain2_1e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["PanelMain2_1e"]["Size"] = UDim2.new(0, 364, 0, 204);
+LMG2L["PanelMain2_1e"]["Position"] = UDim2.new(0, -372, 0, 116);
+LMG2L["PanelMain2_1e"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["PanelMain2_1e"]["Name"] = [[PanelMain2]];
+LMG2L["PanelMain2_1e"]["BackgroundTransparency"] = 0.2;
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.UICorner
+LMG2L["UICorner_1f"] = Instance.new("UICorner", LMG2L["PanelMain2_1e"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame
+LMG2L["ScrollingFrame_20"] = Instance.new("ScrollingFrame", LMG2L["PanelMain2_1e"]);
+LMG2L["ScrollingFrame_20"]["BorderSizePixel"] = 0;
+LMG2L["ScrollingFrame_20"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["ScrollingFrame_20"]["Size"] = UDim2.new(0, 360, 0, 174);
+LMG2L["ScrollingFrame_20"]["ScrollBarImageColor3"] = Color3.fromRGB(134, 134, 134);
+LMG2L["ScrollingFrame_20"]["Position"] = UDim2.new(0, 4, 0, 28);
+LMG2L["ScrollingFrame_20"]["ScrollBarThickness"] = 3;
+LMG2L["ScrollingFrame_20"]["BackgroundTransparency"] = 1;
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.UIListLayout
+LMG2L["UIListLayout_21"] = Instance.new("UIListLayout", LMG2L["ScrollingFrame_20"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript
+LMG2L["SaveScript_22"] = Instance.new("TextLabel", LMG2L["ScrollingFrame_20"]);
+LMG2L["SaveScript_22"]["BorderSizePixel"] = 0;
+LMG2L["SaveScript_22"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["SaveScript_22"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["SaveScript_22"]["Size"] = UDim2.new(0, 356, 0, 28);
+LMG2L["SaveScript_22"]["Text"] = [[   Title Script]];
+LMG2L["SaveScript_22"]["Name"] = [[SaveScript]];
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript.UICorner
+LMG2L["UICorner_23"] = Instance.new("UICorner", LMG2L["SaveScript_22"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript.ExecuteButton
+LMG2L["ExecuteButton_24"] = Instance.new("TextButton", LMG2L["SaveScript_22"]);
+LMG2L["ExecuteButton_24"]["BorderSizePixel"] = 0;
+LMG2L["ExecuteButton_24"]["TextSize"] = 10;
+LMG2L["ExecuteButton_24"]["BackgroundColor3"] = Color3.fromRGB(230, 250, 255);
+LMG2L["ExecuteButton_24"]["FontFace"] = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+LMG2L["ExecuteButton_24"]["Size"] = UDim2.new(0, 58, 0, 20);
+LMG2L["ExecuteButton_24"]["Text"] = [[EXECUTE]];
+LMG2L["ExecuteButton_24"]["Name"] = [[ExecuteButton]];
+LMG2L["ExecuteButton_24"]["Position"] = UDim2.new(0, 292, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript.ExecuteButton.UICorner
+LMG2L["UICorner_25"] = Instance.new("UICorner", LMG2L["ExecuteButton_24"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript.ExecuteButton.UIGradient
+LMG2L["UIGradient_26"] = Instance.new("UIGradient", LMG2L["ExecuteButton_24"]);
+LMG2L["UIGradient_26"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(107, 107, 107)),ColorSequenceKeypoint.new(0.524, Color3.fromRGB(243, 243, 243)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(95, 95, 95))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript.UIGradient
+LMG2L["UIGradient_27"] = Instance.new("UIGradient", LMG2L["SaveScript_22"]);
+LMG2L["UIGradient_27"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(142, 142, 142)),ColorSequenceKeypoint.new(0.602, Color3.fromRGB(247, 247, 247)),ColorSequenceKeypoint.new(0.843, Color3.fromRGB(148, 148, 148)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(148, 148, 148))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript.DeleteButton
+LMG2L["DeleteButton_28"] = Instance.new("TextButton", LMG2L["SaveScript_22"]);
+LMG2L["DeleteButton_28"]["BorderSizePixel"] = 0;
+LMG2L["DeleteButton_28"]["TextSize"] = 10;
+LMG2L["DeleteButton_28"]["BackgroundColor3"] = Color3.fromRGB(230, 250, 255);
+LMG2L["DeleteButton_28"]["FontFace"] = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+LMG2L["DeleteButton_28"]["Size"] = UDim2.new(0, 58, 0, 20);
+LMG2L["DeleteButton_28"]["Text"] = [[DELETE]];
+LMG2L["DeleteButton_28"]["Name"] = [[DeleteButton]];
+LMG2L["DeleteButton_28"]["Position"] = UDim2.new(0, 230, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript.DeleteButton.UICorner
+LMG2L["UICorner_29"] = Instance.new("UICorner", LMG2L["DeleteButton_28"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.ScrollingFrame.SaveScript.DeleteButton.UIGradient
+LMG2L["UIGradient_2a"] = Instance.new("UIGradient", LMG2L["DeleteButton_28"]);
+LMG2L["UIGradient_2a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(107, 107, 107)),ColorSequenceKeypoint.new(0.524, Color3.fromRGB(243, 243, 243)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(95, 95, 95))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.Garis
+LMG2L["Garis_2b"] = Instance.new("Frame", LMG2L["PanelMain2_1e"]);
+LMG2L["Garis_2b"]["BorderSizePixel"] = 0;
+LMG2L["Garis_2b"]["BackgroundColor3"] = Color3.fromRGB(251, 251, 251);
+LMG2L["Garis_2b"]["Size"] = UDim2.new(0, 364, 0, 1);
+LMG2L["Garis_2b"]["Position"] = UDim2.new(0, 0, 0, 24);
+LMG2L["Garis_2b"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Garis_2b"]["Name"] = [[Garis]];
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.Garis.UIGradient
+LMG2L["UIGradient_2c"] = Instance.new("UIGradient", LMG2L["Garis_2b"]);
+LMG2L["UIGradient_2c"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.439, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.Title
+LMG2L["Title_2d"] = Instance.new("TextLabel", LMG2L["PanelMain2_1e"]);
+LMG2L["Title_2d"]["BorderSizePixel"] = 0;
+LMG2L["Title_2d"]["TextSize"] = 18;
+LMG2L["Title_2d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Title_2d"]["FontFace"] = Font.new([[rbxasset://fonts/families/Sarpanch.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+LMG2L["Title_2d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Title_2d"]["BackgroundTransparency"] = 1;
+LMG2L["Title_2d"]["Size"] = UDim2.new(0, 354, 0, 22);
+LMG2L["Title_2d"]["Text"] = [[NARAKU BLOX BETA]];
+LMG2L["Title_2d"]["Name"] = [[Title]];
+LMG2L["Title_2d"]["Position"] = UDim2.new(0, 6, 0, 0);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.UIStroke
+LMG2L["UIStroke_2e"] = Instance.new("UIStroke", LMG2L["PanelMain2_1e"]);
+LMG2L["UIStroke_2e"]["Color"] = Color3.fromRGB(253, 253, 253);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMain2.UIStroke.UIGradient
+LMG2L["UIGradient_2f"] = Instance.new("UIGradient", LMG2L["UIStroke_2e"]);
+LMG2L["UIGradient_2f"]["Rotation"] = 45;
+LMG2L["UIGradient_2f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.439, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.MainButton
+LMG2L["MainButton_30"] = Instance.new("TextButton", LMG2L["PanelUtama_6"]);
+LMG2L["MainButton_30"]["BorderSizePixel"] = 0;
+LMG2L["MainButton_30"]["BackgroundColor3"] = Color3.fromRGB(48, 48, 48);
+LMG2L["MainButton_30"]["BackgroundTransparency"] = 1;
+LMG2L["MainButton_30"]["Size"] = UDim2.new(0, 30, 0, 30);
+LMG2L["MainButton_30"]["BorderColor3"] = Color3.fromRGB(255, 248, 247);
+LMG2L["MainButton_30"]["Text"] = [[]];
+LMG2L["MainButton_30"]["Name"] = [[MainButton]];
+LMG2L["MainButton_30"]["Position"] = UDim2.new(0, 5, 0, 40);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.MainButton.IconMain
+LMG2L["IconMain_31"] = Instance.new("ImageLabel", LMG2L["MainButton_30"]);
+LMG2L["IconMain_31"]["BorderSizePixel"] = 0;
+LMG2L["IconMain_31"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+-- LMG2L["IconMain_31"]["ImageContent"] = ;
+LMG2L["IconMain_31"]["Image"] = [[rbxassetid://79127568785235]];
+LMG2L["IconMain_31"]["Size"] = UDim2.new(0, 22, 0, 22);
+LMG2L["IconMain_31"]["BackgroundTransparency"] = 1;
+LMG2L["IconMain_31"]["Name"] = [[IconMain]];
+LMG2L["IconMain_31"]["Position"] = UDim2.new(0, 4, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.MainButton.UICorner
+LMG2L["UICorner_32"] = Instance.new("UICorner", LMG2L["MainButton_30"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.CloseButton
+LMG2L["CloseButton_33"] = Instance.new("TextButton", LMG2L["PanelUtama_6"]);
+LMG2L["CloseButton_33"]["BorderSizePixel"] = 0;
+LMG2L["CloseButton_33"]["BackgroundColor3"] = Color3.fromRGB(48, 48, 48);
+LMG2L["CloseButton_33"]["BackgroundTransparency"] = 1;
+LMG2L["CloseButton_33"]["Size"] = UDim2.new(0, 30, 0, 30);
+LMG2L["CloseButton_33"]["Text"] = [[]];
+LMG2L["CloseButton_33"]["Name"] = [[CloseButton]];
+LMG2L["CloseButton_33"]["Position"] = UDim2.new(0, 5, 0, 282);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.CloseButton.UICorner
+LMG2L["UICorner_34"] = Instance.new("UICorner", LMG2L["CloseButton_33"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.CloseButton.IconMenu
+LMG2L["IconMenu_35"] = Instance.new("ImageLabel", LMG2L["CloseButton_33"]);
+LMG2L["IconMenu_35"]["BorderSizePixel"] = 0;
+LMG2L["IconMenu_35"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+-- LMG2L["IconMenu_35"]["ImageContent"] = ;
+LMG2L["IconMenu_35"]["Image"] = [[rbxassetid://12122755689]];
+LMG2L["IconMenu_35"]["Size"] = UDim2.new(0, 22, 0, 22);
+LMG2L["IconMenu_35"]["BackgroundTransparency"] = 1;
+LMG2L["IconMenu_35"]["Name"] = [[IconMenu]];
+LMG2L["IconMenu_35"]["Position"] = UDim2.new(0, 4, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1
+LMG2L["PanelMenu1_36"] = Instance.new("Frame", LMG2L["PanelUtama_6"]);
+LMG2L["PanelMenu1_36"]["BorderSizePixel"] = 0;
+LMG2L["PanelMenu1_36"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["PanelMenu1_36"]["Size"] = UDim2.new(0, 364, 0, 76);
+LMG2L["PanelMenu1_36"]["Position"] = UDim2.new(0, -372, 0, 2);
+LMG2L["PanelMenu1_36"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["PanelMenu1_36"]["Name"] = [[PanelMenu1]];
+LMG2L["PanelMenu1_36"]["BackgroundTransparency"] = 0.2;
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.UICorner
+LMG2L["UICorner_37"] = Instance.new("UICorner", LMG2L["PanelMenu1_36"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork
+LMG2L["FrameNetWork_38"] = Instance.new("Frame", LMG2L["PanelMenu1_36"]);
+LMG2L["FrameNetWork_38"]["BorderSizePixel"] = 0;
+LMG2L["FrameNetWork_38"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["FrameNetWork_38"]["Size"] = UDim2.new(0, 232, 0, 28);
+LMG2L["FrameNetWork_38"]["Position"] = UDim2.new(0, 6, 0, 40);
+LMG2L["FrameNetWork_38"]["Name"] = [[FrameNetWork]];
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork.MS PING
+LMG2L["MS PING_39"] = Instance.new("TextLabel", LMG2L["FrameNetWork_38"]);
+LMG2L["MS PING_39"]["BorderSizePixel"] = 0;
+LMG2L["MS PING_39"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["MS PING_39"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["MS PING_39"]["TextColor3"] = Color3.fromRGB(255, 248, 247);
+LMG2L["MS PING_39"]["Size"] = UDim2.new(0, 80, 0, 20);
+LMG2L["MS PING_39"]["Text"] = [[   30 MS PING]];
+LMG2L["MS PING_39"]["Name"] = [[MS PING]];
+LMG2L["MS PING_39"]["Position"] = UDim2.new(0, 76, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork.MS PING.UICorner
+LMG2L["UICorner_3a"] = Instance.new("UICorner", LMG2L["MS PING_39"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork.FPS
+LMG2L["FPS_3b"] = Instance.new("TextLabel", LMG2L["FrameNetWork_38"]);
+LMG2L["FPS_3b"]["BorderSizePixel"] = 0;
+LMG2L["FPS_3b"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["FPS_3b"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["FPS_3b"]["TextColor3"] = Color3.fromRGB(255, 248, 247);
+LMG2L["FPS_3b"]["Size"] = UDim2.new(0, 66, 0, 20);
+LMG2L["FPS_3b"]["Text"] = [[   30 FPS]];
+LMG2L["FPS_3b"]["Name"] = [[FPS]];
+LMG2L["FPS_3b"]["Position"] = UDim2.new(0, 6, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork.FPS.UICorner
+LMG2L["UICorner_3c"] = Instance.new("UICorner", LMG2L["FPS_3b"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork.UICorner
+LMG2L["UICorner_3d"] = Instance.new("UICorner", LMG2L["FrameNetWork_38"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork.MS PING
+LMG2L["MS PING_3e"] = Instance.new("TextLabel", LMG2L["FrameNetWork_38"]);
+LMG2L["MS PING_3e"]["BorderSizePixel"] = 0;
+LMG2L["MS PING_3e"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["MS PING_3e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["MS PING_3e"]["TextColor3"] = Color3.fromRGB(255, 248, 247);
+LMG2L["MS PING_3e"]["Size"] = UDim2.new(0, 66, 0, 20);
+LMG2L["MS PING_3e"]["Text"] = [[   1 PLAYER]];
+LMG2L["MS PING_3e"]["Name"] = [[MS PING]];
+LMG2L["MS PING_3e"]["Position"] = UDim2.new(0, 160, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork.MS PING.UICorner
+LMG2L["UICorner_3f"] = Instance.new("UICorner", LMG2L["MS PING_3e"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.FrameNetWork.UIGradient
+LMG2L["UIGradient_40"] = Instance.new("UIGradient", LMG2L["FrameNetWork_38"]);
+LMG2L["UIGradient_40"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(142, 142, 142)),ColorSequenceKeypoint.new(0.602, Color3.fromRGB(247, 247, 247)),ColorSequenceKeypoint.new(0.843, Color3.fromRGB(148, 148, 148)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(148, 148, 148))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.TextStatus
+LMG2L["TextStatus_41"] = Instance.new("TextLabel", LMG2L["PanelMenu1_36"]);
+LMG2L["TextStatus_41"]["BorderSizePixel"] = 0;
+LMG2L["TextStatus_41"]["TextSize"] = 18;
+LMG2L["TextStatus_41"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["TextStatus_41"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["TextStatus_41"]["FontFace"] = Font.new([[rbxasset://fonts/families/Sarpanch.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+LMG2L["TextStatus_41"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["TextStatus_41"]["BackgroundTransparency"] = 1;
+LMG2L["TextStatus_41"]["Size"] = UDim2.new(0, 132, 0, 22);
+LMG2L["TextStatus_41"]["Text"] = [[NetWork]];
+LMG2L["TextStatus_41"]["Name"] = [[TextStatus]];
+LMG2L["TextStatus_41"]["Position"] = UDim2.new(0, 34, 0, 4);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.TextStatus.Text
+LMG2L["Text_42"] = Instance.new("TextLabel", LMG2L["TextStatus_41"]);
+LMG2L["Text_42"]["BorderSizePixel"] = 0;
+LMG2L["Text_42"]["TextSize"] = 14;
+LMG2L["Text_42"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["Text_42"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Text_42"]["FontFace"] = Font.new([[rbxasset://fonts/families/Sarpanch.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+LMG2L["Text_42"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Text_42"]["BackgroundTransparency"] = 1;
+LMG2L["Text_42"]["Size"] = UDim2.new(0, 132, 0, 10);
+LMG2L["Text_42"]["Text"] = [[Client Status Information]];
+LMG2L["Text_42"]["Name"] = [[Text]];
+LMG2L["Text_42"]["Position"] = UDim2.new(0, 0, 0, 20);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.IconJaringan
+LMG2L["IconJaringan_43"] = Instance.new("ImageLabel", LMG2L["PanelMenu1_36"]);
+LMG2L["IconJaringan_43"]["BorderSizePixel"] = 0;
+LMG2L["IconJaringan_43"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+-- LMG2L["IconJaringan_43"]["ImageContent"] = ;
+LMG2L["IconJaringan_43"]["Image"] = [[rbxassetid://137556743681097]];
+LMG2L["IconJaringan_43"]["Size"] = UDim2.new(0, 22, 0, 22);
+LMG2L["IconJaringan_43"]["BackgroundTransparency"] = 1;
+LMG2L["IconJaringan_43"]["Name"] = [[IconJaringan]];
+LMG2L["IconJaringan_43"]["Position"] = UDim2.new(0, 6, 0, 12);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.UIStroke
+LMG2L["UIStroke_44"] = Instance.new("UIStroke", LMG2L["PanelMenu1_36"]);
+LMG2L["UIStroke_44"]["Color"] = Color3.fromRGB(253, 253, 253);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.UIStroke.UIGradient
+LMG2L["UIGradient_45"] = Instance.new("UIGradient", LMG2L["UIStroke_44"]);
+LMG2L["UIGradient_45"]["Rotation"] = 45;
+LMG2L["UIGradient_45"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.439, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.RejoinButton
+LMG2L["RejoinButton_46"] = Instance.new("TextButton", LMG2L["PanelMenu1_36"]);
+LMG2L["RejoinButton_46"]["BorderSizePixel"] = 0;
+LMG2L["RejoinButton_46"]["TextSize"] = 7;
+LMG2L["RejoinButton_46"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["RejoinButton_46"]["Size"] = UDim2.new(0, 98, 0, 20);
+LMG2L["RejoinButton_46"]["Text"] = [[REJOIN SERVER]];
+LMG2L["RejoinButton_46"]["Name"] = [[RejoinButton]];
+LMG2L["RejoinButton_46"]["Position"] = UDim2.new(0, 254, 0, 44);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.RejoinButton.UICorner
+LMG2L["UICorner_47"] = Instance.new("UICorner", LMG2L["RejoinButton_46"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu1.RejoinButton.UIGradient
+LMG2L["UIGradient_48"] = Instance.new("UIGradient", LMG2L["RejoinButton_46"]);
+LMG2L["UIGradient_48"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(142, 142, 142)),ColorSequenceKeypoint.new(0.602, Color3.fromRGB(247, 247, 247)),ColorSequenceKeypoint.new(0.843, Color3.fromRGB(148, 148, 148)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(148, 148, 148))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.UICorner
+LMG2L["UICorner_49"] = Instance.new("UICorner", LMG2L["PanelUtama_6"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2
+LMG2L["PanelMenu2_4a"] = Instance.new("Frame", LMG2L["PanelUtama_6"]);
+LMG2L["PanelMenu2_4a"]["BorderSizePixel"] = 0;
+LMG2L["PanelMenu2_4a"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+LMG2L["PanelMenu2_4a"]["Size"] = UDim2.new(0, 364, 0, 234);
+LMG2L["PanelMenu2_4a"]["Position"] = UDim2.new(0, -372, 0, 84);
+LMG2L["PanelMenu2_4a"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["PanelMenu2_4a"]["Name"] = [[PanelMenu2]];
+LMG2L["PanelMenu2_4a"]["BackgroundTransparency"] = 0.2;
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ExecuteButton
+LMG2L["ExecuteButton_4b"] = Instance.new("TextButton", LMG2L["PanelMenu2_4a"]);
+LMG2L["ExecuteButton_4b"]["BorderSizePixel"] = 0;
+LMG2L["ExecuteButton_4b"]["TextSize"] = 10;
+LMG2L["ExecuteButton_4b"]["BackgroundColor3"] = Color3.fromRGB(230, 250, 255);
+LMG2L["ExecuteButton_4b"]["FontFace"] = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+LMG2L["ExecuteButton_4b"]["ZIndex"] = 2;
+LMG2L["ExecuteButton_4b"]["Size"] = UDim2.new(0, 60, 0, 20);
+LMG2L["ExecuteButton_4b"]["Text"] = [[EXECUTE]];
+LMG2L["ExecuteButton_4b"]["Name"] = [[ExecuteButton]];
+LMG2L["ExecuteButton_4b"]["Position"] = UDim2.new(0, 228, 0, 208);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ExecuteButton.UICorner
+LMG2L["UICorner_4c"] = Instance.new("UICorner", LMG2L["ExecuteButton_4b"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ExecuteButton.UIGradient
+LMG2L["UIGradient_4d"] = Instance.new("UIGradient", LMG2L["ExecuteButton_4b"]);
+LMG2L["UIGradient_4d"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(107, 107, 107)),ColorSequenceKeypoint.new(0.524, Color3.fromRGB(243, 243, 243)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(95, 95, 95))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.UIStroke
+LMG2L["UIStroke_4e"] = Instance.new("UIStroke", LMG2L["PanelMenu2_4a"]);
+LMG2L["UIStroke_4e"]["Color"] = Color3.fromRGB(253, 253, 253);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.UIStroke.UIGradient
+LMG2L["UIGradient_4f"] = Instance.new("UIGradient", LMG2L["UIStroke_4e"]);
+LMG2L["UIGradient_4f"]["Rotation"] = 45;
+LMG2L["UIGradient_4f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.439, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.Title
+LMG2L["Title_50"] = Instance.new("TextLabel", LMG2L["PanelMenu2_4a"]);
+LMG2L["Title_50"]["BorderSizePixel"] = 0;
+LMG2L["Title_50"]["TextSize"] = 18;
+LMG2L["Title_50"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Title_50"]["FontFace"] = Font.new([[rbxasset://fonts/families/Sarpanch.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+LMG2L["Title_50"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Title_50"]["BackgroundTransparency"] = 1;
+LMG2L["Title_50"]["Size"] = UDim2.new(0, 354, 0, 22);
+LMG2L["Title_50"]["Text"] = [[NARAKU BLOX SCRIPT]];
+LMG2L["Title_50"]["Name"] = [[Title]];
+LMG2L["Title_50"]["Position"] = UDim2.new(0, 6, 0, 0);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.Garis
+LMG2L["Garis_51"] = Instance.new("Frame", LMG2L["PanelMenu2_4a"]);
+LMG2L["Garis_51"]["BorderSizePixel"] = 0;
+LMG2L["Garis_51"]["BackgroundColor3"] = Color3.fromRGB(251, 251, 251);
+LMG2L["Garis_51"]["Size"] = UDim2.new(0, 364, 0, 1);
+LMG2L["Garis_51"]["Position"] = UDim2.new(0, 0, 0, 22);
+LMG2L["Garis_51"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["Garis_51"]["Name"] = [[Garis]];
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.Garis.UIGradient
+LMG2L["UIGradient_52"] = Instance.new("UIGradient", LMG2L["Garis_51"]);
+LMG2L["UIGradient_52"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.439, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ClearButton
+LMG2L["ClearButton_53"] = Instance.new("TextButton", LMG2L["PanelMenu2_4a"]);
+LMG2L["ClearButton_53"]["BorderSizePixel"] = 0;
+LMG2L["ClearButton_53"]["TextSize"] = 10;
+LMG2L["ClearButton_53"]["BackgroundColor3"] = Color3.fromRGB(230, 250, 255);
+LMG2L["ClearButton_53"]["FontFace"] = Font.new([[rbxasset://fonts/families/Arimo.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+LMG2L["ClearButton_53"]["ZIndex"] = 2;
+LMG2L["ClearButton_53"]["Size"] = UDim2.new(0, 60, 0, 20);
+LMG2L["ClearButton_53"]["Text"] = [[CLEAR]];
+LMG2L["ClearButton_53"]["Name"] = [[ClearButton]];
+LMG2L["ClearButton_53"]["Position"] = UDim2.new(0, 296, 0, 208);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ClearButton.UICorner
+LMG2L["UICorner_54"] = Instance.new("UICorner", LMG2L["ClearButton_53"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ClearButton.UIGradient
+LMG2L["UIGradient_55"] = Instance.new("UIGradient", LMG2L["ClearButton_53"]);
+LMG2L["UIGradient_55"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(107, 107, 107)),ColorSequenceKeypoint.new(0.524, Color3.fromRGB(243, 243, 243)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(95, 95, 95))};
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.Icon
+LMG2L["Icon_56"] = Instance.new("ImageLabel", LMG2L["PanelMenu2_4a"]);
+LMG2L["Icon_56"]["BorderSizePixel"] = 0;
+LMG2L["Icon_56"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+-- LMG2L["Icon_56"]["ImageContent"] = ;
+LMG2L["Icon_56"]["Image"] = [[rbxassetid://73094541927465]];
+LMG2L["Icon_56"]["Size"] = UDim2.new(0, 20, 0, 20);
+LMG2L["Icon_56"]["BackgroundTransparency"] = 1;
+LMG2L["Icon_56"]["Name"] = [[Icon]];
+LMG2L["Icon_56"]["Position"] = UDim2.new(0, 8, 0, 0);
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.UICorner
+LMG2L["UICorner_57"] = Instance.new("UICorner", LMG2L["PanelMenu2_4a"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ScrollingFrame
+LMG2L["ScrollingFrame_58"] = Instance.new("ScrollingFrame", LMG2L["PanelMenu2_4a"]);
+LMG2L["ScrollingFrame_58"]["BorderSizePixel"] = 0;
+LMG2L["ScrollingFrame_58"]["BackgroundColor3"] = Color3.fromRGB(76, 76, 76);
+LMG2L["ScrollingFrame_58"]["Size"] = UDim2.new(0, 358, 0, 206);
+LMG2L["ScrollingFrame_58"]["ScrollBarImageColor3"] = Color3.fromRGB(134, 134, 134);
+LMG2L["ScrollingFrame_58"]["Position"] = UDim2.new(0, 4, 0, 26);
+LMG2L["ScrollingFrame_58"]["ScrollBarThickness"] = 3;
+LMG2L["ScrollingFrame_58"]["BackgroundTransparency"] = 1;
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ScrollingFrame.UIListLayout
+LMG2L["UIListLayout_59"] = Instance.new("UIListLayout", LMG2L["ScrollingFrame_58"]);
+
+
+
+-- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.PanelMenu2.ScrollingFrame.ScriptBox
+LMG2L["ScriptBox_5a"] = Instance.new("TextBox", LMG2L["ScrollingFrame_58"]);
+LMG2L["ScriptBox_5a"]["Name"] = [[ScriptBox]];
+LMG2L["ScriptBox_5a"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+LMG2L["ScriptBox_5a"]["BorderSizePixel"] = 0;
+LMG2L["ScriptBox_5a"]["TextSize"] = 12;
+LMG2L["ScriptBox_5a"]["TextColor3"] = Color3.fromRGB(255, 255, 254);
+LMG2L["ScriptBox_5a"]["TextYAlignment"] = Enum.TextYAlignment.Top;
+LMG2L["ScriptBox_5a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+LMG2L["ScriptBox_5a"]["FontFace"] = Font.new([[rbxasset://fonts/families/Inconsolata.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+LMG2L["ScriptBox_5a"]["Size"] = UDim2.new(0, 356, 0, 202);
+LMG2L["ScriptBox_5a"]["Position"] = UDim2.new(0, 0, 0, 2);
+LMG2L["ScriptBox_5a"]["Text"] = [[print('Hello World')]];
+LMG2L["ScriptBox_5a"]["BackgroundTransparency"] = 1;
+
+
+
+return LMG2L["ScreenGui_1"], require;
