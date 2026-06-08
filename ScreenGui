@@ -734,29 +734,30 @@ LMG2L["ScriptBox_5a"]["BackgroundTransparency"] = 1;
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- 1. Inisialisasi Referensi UI Berdasarkan Objek Variabel Kamu
+-- 1. Inisialisasi Referensi UI Sesuai 100% dengan Variabel Array LMG2L Kamu
 local ScreenGui    = LMG2L["ScreenGui_1"]       -- ScreenGui Utama 
-local OpenButton   = LMG2L["OpenButton_2"]      -- Tombol Buka Panel [cite: 120]
-local PanelUtama   = LMG2L["PanelUtama_6"]      -- Frame Vertikal Utama [cite: 124]
-local MenuButton   = LMG2L["MenuButton_7"]      -- Tombol Menu [cite: 126]
-local MainButton   = LMG2L["MainButton_30"]     -- Tombol Main [cite: 178]
-local CloseButton  = LMG2L["CloseButton_33"]    -- Tombol Tutup Panel [cite: 182]
+local OpenButton   = LMG2L["OpenButton_2"]      -- Tombol Buka Panel [cite: 2]
+local PanelUtama   = LMG2L["PanelUtama_6"]      -- Frame Vertikal Utama [cite: 6]
+local MenuButton   = LMG2L["MenuButton_7"]      -- Tombol Menu [cite: 8]
+local MainButton   = LMG2L["MainButton_30"]     -- Tombol Main [cite: 60]
+local CloseButton  = LMG2L["CloseButton_33"]    -- Tombol Tutup Panel [cite: 64]
 
--- Sub-Panel Main & Menu
-local PanelMain1   = LMG2L["PanelMain1_c"]      -- Panel Utama Atas [cite: 132]
-local PanelMain2   = LMG2L["PanelMain2_1e"]     -- Panel Utama Bawah [cite: 155]
-local PanelMenu1   = LMG2L["PanelMenu1_36"]     -- Panel Menu Atas [cite: 187]
-local PanelMenu2   = LMG2L["PanelMenu2_4f"] or LMG2L["PanelMenu2_50"] or PanelUtama:FindFirstChild("PanelMenu2") -- Autodetect PanelMenu2 jika ada
+-- Sub-Panel Main & Menu Sesuai Penamaan di File Struktur
+local PanelMain1   = LMG2L["PanelMain1_c"]      -- Panel Utama Atas [cite: 14]
+local PanelMain2   = LMG2L["PanelMain2_1e"]     -- Panel Utama Bawah [cite: 37]
+local PanelMenu1   = LMG2L["PanelMenu1_36"]     -- Panel Menu Atas
+local PanelMenu2   = LMG2L["PanelMenu2_4f"] or LMG2L["PanelMenu2_50"] or PanelUtama:FindFirstChild("PanelMenu2") -- Deteksi Otomatis PanelMenu2
 
 -- Simpan Posisi Asli Objek untuk Keperluan Animasi Sempurna
-local originalPanelUtamaPos = PanelUtama.Position [cite: 125]
+local originalPanelUtamaPos = PanelUtama.Position [cite: 7]
+-- Menggeser ke kanan layar luar (+50 offset) saat diclose agar tersembunyi total
 local offscreenPanelUtamaPos = UDim2.new(1, 50, originalPanelUtamaPos.Y.Scale, originalPanelUtamaPos.Y.Offset)
 
 -- Pengaturan Awal State UI
-PanelUtama.Position = originalPanelUtamaPos [cite: 125]
-OpenButton.Visible = false -- Tersembunyi saat panel utama aktif di awal [cite: 121]
+PanelUtama.Position = originalPanelUtamaPos [cite: 7]
+OpenButton.Visible = false -- Tersembunyi di awal saat panel utama aktif [cite: 3]
 
--- Setup Sistem Dragging Manual yang Aman & Akurat untuk OpenButton
+-- Setup Sistem Dragging Manual yang Aman & Responsif untuk OpenButton (Mobile & PC)
 OpenButton.Active = true
 local dragging = false
 local dragInput, dragStart, startPosition
@@ -794,16 +795,17 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- 2. Fungsi Animasi Visual Klik Transparan Putih (Flash Effect)
+-- 2. Fungsi Animasi Visual Klik Transparan Putih (Flash Effect) Sesuai Instruksi
 local function playVisualClick(button)
+    -- Simpan settingan awal tombol target
     local originalColor = button.BackgroundColor3
     local originalTrans = button.BackgroundTransparency
     
-    -- Ubah instan menjadi putih transparan
+    -- Visual instan: Putih Transparan saat diklik
     button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     button.BackgroundTransparency = 0.5
     
-    -- Kembalikan ke warna awal secara perlahan & elegan
+    -- Transisi mengembalikan ke kondisi semula (Simple Elegan)
     local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local tween = TweenService:Create(button, tweenInfo, {
         BackgroundColor3 = originalColor,
@@ -812,73 +814,59 @@ local function playVisualClick(button)
     tween:Play()
 end
 
--- Fungsi Helper untuk Menyembunyikan/Menampilkan Sub Panel
+-- Fungsi Pengontrol Visibilitas Group Sub-Panel (Menghindari Bug Tumpang Tindih)
 local function toggleSubPanels(showMain, showMenu)
-    local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     
-    -- Handler Panel Main
+    -- Handler Animasi Group Panel Main (1 & 2 beserta Isinya)
     if PanelMain1 then
-        TweenService:Create(PanelMain1, tweenInfo, {BackgroundTransparency = showMain and 0.2 or 1}):Play() [cite: 133]
-        for _, child in ipairs(PanelMain1:GetDescendants()) do
-            if child:IsA("GuiObject") then
-                TweenService:Create(child, tweenInfo, {ImageTransparency = showMain and 0 or 1, TextTransparency = showMain and 0 or 1}):Play()
-            end
-        end
+        PanelMain1.Visible = showMain
+        TweenService:Create(PanelMain1, tweenInfo, {BackgroundTransparency = showMain and 0.2 or 1}):Play() [cite: 15]
     end
     if PanelMain2 then
-        TweenService:Create(PanelMain2, tweenInfo, {BackgroundTransparency = showMain and 0.2 or 1}):Play() [cite: 157]
-        for _, child in ipairs(PanelMain2:GetDescendants()) do
-            if child:IsA("GuiObject") then
-                TweenService:Create(child, tweenInfo, {ImageTransparency = showMain and 0 or 1, TextTransparency = showMain and 0 or 1}):Play()
-            end
-        end
+        PanelMain2.Visible = showMain
+        TweenService:Create(PanelMain2, tweenInfo, {BackgroundTransparency = showMain and 0.2 or 1}):Play() [cite: 39]
     end
     
-    -- Handler Panel Menu
+    -- Handler Animasi Group Panel Menu (1 & 2 beserta Isinya)
     if PanelMenu1 then
-        TweenService:Create(PanelMenu1, tweenInfo, {BackgroundTransparency = showMenu and 0.2 or 1}):Play() [cite: 189]
-        for _, child in ipairs(PanelMenu1:GetDescendants()) do
-            if child:IsA("GuiObject") then
-                TweenService:Create(child, tweenInfo, {ImageTransparency = showMenu and 0 or 1, TextTransparency = showMenu and 0 or 1}):Play()
-            end
-        end
+        PanelMenu1.Visible = showMenu
+        TweenService:Create(PanelMenu1, tweenInfo, {BackgroundTransparency = showMenu and 0.2 or 1}):Play()
     end
     if PanelMenu2 then
+        PanelMenu2.Visible = showMenu
         TweenService:Create(PanelMenu2, tweenInfo, {BackgroundTransparency = showMenu and 0.2 or 1}):Play()
-        for _, child in ipairs(PanelMenu2:GetDescendants()) do
-            if child:IsA("GuiObject") then
-                TweenService:Create(child, tweenInfo, {ImageTransparency = showMenu and 0 or 1, TextTransparency = showMenu and 0 or 1}):Play()
-            end
-        end
     end
 end
 
--- Tampilkan Main Panel secara default di awal script berjalan
+-- Kondisi Default Saat Dijalankan: Tampilkan Main Panel, Sembunyikan Menu Panel
 toggleSubPanels(true, false)
 
--- 3. Interaksi Tombol CLOSE BUTTON
+-- 3. Interaksi Tombol CLOSE BUTTON [cite: 64]
 CloseButton.MouseButton1Click:Connect(function()
     playVisualClick(CloseButton)
     
-    -- Animasi geser menyembunyikan Panel Utama keluar layar secara elegan
-    local closeTween = TweenService:Create(PanelUtama, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+    -- Animasi menggeser Panel Utama beserta seluruh isinya keluar layar (Elegance Quad Style)
+    local closeTween = TweenService:Create(PanelUtama, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         Position = offscreenPanelUtamaPos
     })
     
     closeTween:Play()
     closeTween.Completed:Connect(function()
-        -- Munculkan OpenButton tepat di koordinat luar layar tempat Panel Utama bersembunyi (menyesuaikan posisi drag sebelumnya)
+        -- Menampilkan OpenButton di koordinat layar saat ini (mengikuti posisi drag terakhirnya)
         OpenButton.Visible = true
+        OpenButton.Size = UDim2.new(0, 0, 0, 0) -- Mulai dari ukuran 0 untuk animasi pop-up
+        
         local popTween = TweenService:Create(OpenButton, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 35, 0, 35) [cite: 121]
+            Size = UDim2.new(0, 35, 0, 35) -- Kembali ke ukuran asli objek [cite: 3]
         })
         popTween:Play()
     end)
 end)
 
--- 4. Interaksi Tombol OPEN BUTTON
+-- 4. Interaksi Tombol OPEN BUTTON [cite: 2]
 OpenButton.MouseButton1Click:Connect(function()
-    -- Animasi mengecilkan tombol open saat diklik
+    -- Animasi mengecilkan tombol secara smooth saat ditekan sebelum menghilang
     local shrinkTween = TweenService:Create(OpenButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0)
     })
@@ -886,42 +874,43 @@ OpenButton.MouseButton1Click:Connect(function()
     
     shrinkTween.Completed:Connect(function()
         OpenButton.Visible = false
-        -- Geser Panel Utama kembali masuk ke posisi semula yang pas di layar
+        OpenButton.Size = UDim2.new(0, 35, 0, 35) -- Reset size ke default untuk dipakai nanti [cite: 3]
+        
+        -- Mengembalikan Panel Utama masuk kembali ke posisi pas semula di dalam layar
         local openTween = TweenService:Create(PanelUtama, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = originalPanelUtamaPos [cite: 125]
+            Position = originalPanelUtamaPos [cite: 7]
         })
         openTween:Play()
     end)
 end)
 
--- 5. Interaksi Tombol MENU BUTTON (Akses Panel Menu 1 & 2)
+-- 5. Interaksi Tombol MENU BUTTON (Akses & Munculkan Panel Menu 1 dan 2) [cite: 8]
 MenuButton.MouseButton1Click:Connect(function()
     playVisualClick(MenuButton)
-    toggleSubPanels(false, true) -- Sembunyikan Main, Tampilkan Menu
+    toggleSubPanels(false, true) -- Sembunyikan Main, Tampilkan Menu beserta Isinya
 end)
 
--- 6. Interaksi Tombol MAIN BUTTON (Akses Panel Main 1 & 2)
+-- 6. Interaksi Tombol MAIN BUTTON (Akses & Munculkan Panel Main 1 dan 2) [cite: 60]
 MainButton.MouseButton1Click:Connect(function()
     playVisualClick(MainButton)
-    toggleSubPanels(true, false) -- Tampilkan Main, Sembunyikan Menu
+    toggleSubPanels(true, false) -- Tampilkan Main, Sembunyikan Menu beserta Isinya
 end)
 
--- 7. Loop Efek Rotasi Dinamis Otomatis Untuk UIStroke UIGradient Sesuai Settingan Kamu
+-- 7. Sistem Loop Rotasi Dinamis Otomatis Pada UIStroke UIGradient
 local gradientsToRotate = {}
-if LMG2L["UIGradient_5"] then table.insert(gradientsToRotate, LMG2L["UIGradient_5"]) end -- OpenButton Gradient [cite: 123]
-if LMG2L["UIGradient_b"] then table.insert(gradientsToRotate, LMG2L["UIGradient_b"]) end -- PanelUtama Gradient [cite: 131]
-if LMG2L["UIGradient_1d"] then table.insert(gradientsToRotate, LMG2L["UIGradient_1d"]) end -- PanelMain1 Gradient [cite: 154]
-if LMG2L["UIGradient_2f"] then table.insert(gradientsToRotate, LMG2L["UIGradient_2f"]) end -- PanelMain2 Gradient [cite: 177]
+if LMG2L["UIGradient_5"] then table.insert(gradientsToRotate, LMG2L["UIGradient_5"]) end   -- UIGradient OpenButton [cite: 5]
+if LMG2L["UIGradient_b"] then table.insert(gradientsToRotate, LMG2L["UIGradient_b"]) end   -- UIGradient PanelUtama [cite: 13]
+if LMG2L["UIGradient_1d"] then table.insert(gradientsToRotate, LMG2L["UIGradient_1d"]) end -- UIGradient PanelMain1 [cite: 36]
+if LMG2L["UIGradient_2f"] then table.insert(gradientsToRotate, LMG2L["UIGradient_2f"]) end -- UIGradient PanelMain2 [cite: 59]
 
--- Jalankan rotasi gradient secara mulus tanpa lag di background menggunakan task.spawn
 task.spawn(function()
     while true do
         for _, gradient in ipairs(gradientsToRotate) do
             if gradient and gradient.Parent then
-                gradient.Rotation = (gradient.Rotation + 1) % 360 [cite: 123, 131]
+                gradient.Rotation = (gradient.Rotation + 1) % 360 [cite: 5, 13]
             end
         end
-        task.wait(0.03) -- Nilai wait yang optimal agar perputaran halus dan 0% beban lag
+        task.wait(0.02) -- Kecepatan perputaran rotasi yang halus dan sangat ringan (0% lag)
     end
 end)
 -- =============================================================================
