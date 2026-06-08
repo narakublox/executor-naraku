@@ -1255,22 +1255,22 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- LOGIKA CLEAN REJOIN SYSTEM (PINDAH SERVER BARU / ACAK - 100% AMAN DARI KICK)
+-- LOGIKA CLEAN REJOIN SYSTEM (LONG DELAY KICK BYPASS - 100% AMAN DARI KICK)
 -- =============================================================================
 if RejoinBtn then
     RejoinBtn.MouseButton1Click:Connect(function()
         task.spawn(function()
-            -- Jeda 0.5 detik biar engine game siap-siap mutus koneksi server lama
-            task.wait(0.5)
+            -- 1. Tendang diri lu secara lokal biar anti-cheat server lama gak bisa nge-track lu lagi
+            LocalPlayer:Kick("\n[NARAKU HUB]\nSedang memproses server baru...\nMohon tunggu sekitar 4 detik agar bypass aman...")
             
-            -- Eksekusi Teleport biasa tanpa ngunci JobId = Roblox otomatis cari Server Baru yang aktif
-            local success, err = pcall(function()
+            -- 2. KASIH JEDAA AGAK LAMA (4 DETIK)
+            -- Waktu ini sangat cukup buat Roblox ngebersihin cache dan nyari server publik baru
+            task.wait(4.0)
+            
+            -- 3. Eksekusi masuk ke server baru yang berbeda
+            pcall(function()
                 TeleportService:Teleport(game.PlaceId, LocalPlayer)
             end)
-            
-            if not success then
-                warn("Gagal pindah server:", err)
-            end
         end)
     end)
 end
