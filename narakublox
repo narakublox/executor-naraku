@@ -1255,11 +1255,15 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- LOGIKA CLEAN REJOIN SYSTEM (ANTI KICK / DISCONNECT WARNING)
+-- LOGIKA CLEAN REJOIN SYSTEM (ANTI KICK DETECT - KODE EROR 267 BYPASS)
 -- =============================================================================
 if RejoinBtn then
     RejoinBtn.MouseButton1Click:Connect(function()
         task.spawn(function()
+            -- Memberikan jeda 0.5 detik agar engine game menyelesaikan proses internalnya
+            -- Ini mencegah sistem anti-cheat game mendeteksi teleportasi instan yang memicu Error 267
+            task.wait(0.5)
+            
             local teleportOptions = Instance.new("TeleportOptions")
             
             if game.JobId ~= "" then
@@ -1267,7 +1271,7 @@ if RejoinBtn then
                 teleportOptions.ServerInstanceId = game.JobId
             end
             
-            -- Lakukan Teleport secara Async (Lebih mulus dan melewati sistem pemutusan paksa)
+            -- Lakukan Teleport secara Async
             local success, err = pcall(function()
                 TeleportService:TeleportAsync(game.PlaceId, {LocalPlayer}, teleportOptions)
             end)
@@ -1286,7 +1290,6 @@ if RejoinBtn then
         end)
     end)
 end
-
 -- =============================================================================
 -- [PANEL MENU 2]: TEXTBOX SCRIPT EDITOR ADVANCED (DENGAN LOGIKA AUTO-PLACEHOLDER)
 -- =============================================================================
