@@ -738,7 +738,7 @@ local SoundService = game:GetService("SoundService") -- Tambahan untuk manajemen
 
 -- 1. Verifikasi Keberadaan Array LMG2L
 if not LMG2L or type(LMG2L) ~= "table" then
-    warn("ERROR: Array LMG2L tidak ditemukan atau gagal dimuat!")
+    warn("ERROR: Naraku Blox gagal dimuat!")
     return
 end
 
@@ -992,7 +992,7 @@ task.spawn(function()
     end
 end)
 
-print("SYSTEM MAIN PANEL: 100% SUCCESS, CORE_GUI & AUDIO INTEGRATION LOGGED!")
+print("SYSTEM MAIN PANEL: NARAKU BLOX BETA SCRIPT SUKSES!")
 -- =============================================================================
 
 return LMG2L["ScreenGui_1"], require;
