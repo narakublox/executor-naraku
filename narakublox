@@ -1254,14 +1254,36 @@ task.spawn(function()
     end
 end)
 
--- LOGIKA INSTANT REJOIN INSTANCE SERVER YANG SAMA
+-- =============================================================================
+-- LOGIKA CLEAN REJOIN SYSTEM (ANTI KICK / DISCONNECT WARNING)
+-- =============================================================================
 if RejoinBtn then
     RejoinBtn.MouseButton1Click:Connect(function()
-        if game.JobId ~= "" then
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-        else
-            TeleportService:Teleport(game.PlaceId, LocalPlayer)
-        end
+        task.spawn(function()
+            local teleportOptions = Instance.new("TeleportOptions")
+            
+            if game.JobId ~= "" then
+                -- Kunci target ke spesifik Server Instance ID yang sama saat ini
+                teleportOptions.ServerInstanceId = game.JobId
+            end
+            
+            -- Lakukan Teleport secara Async (Lebih mulus dan melewati sistem pemutusan paksa)
+            local success, err = pcall(function()
+                TeleportService:TeleportAsync(game.PlaceId, {LocalPlayer}, teleportOptions)
+            end)
+            
+            -- Jalankan metode darurat cadangan jika teleport utama gagal dieksekusi
+            if not success then
+                warn("TeleportAsync Error: " .. tostring(err))
+                pcall(function()
+                    if game.JobId ~= "" then
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+                    else
+                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+                    end
+                end)
+            end
+        end)
     end)
 end
 
