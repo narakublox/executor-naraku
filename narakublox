@@ -1254,42 +1254,38 @@ task.spawn(function()
     end
 end)
 
--- =============================================================================
--- LOGIKA CLEAN REJOIN SYSTEM (ANTI KICK DETECT - KODE EROR 267 BYPASS)
--- =============================================================================
-if RejoinBtn then
-    RejoinBtn.MouseButton1Click:Connect(function()
+-- Rejoin Server (100% Server Yang Sama + Bypass Error 267)
+ServerTab:Button({
+    Title = "REJOIN SERVER",
+    Desc = "Masuk ulang ke server yang sama",
+    Callback = function()
+        -- 1. Beri Notifikasi ke Layar Player menggunakan sistem bawaan Roblox (Anti-Error)
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "REJOIN",
+                Text = "Menghubungkan ulang ke server yang sama...",
+                Duration = 3
+            })
+        end)
+        
+        -- 2. Jalankan proses secara asynchronous di background
         task.spawn(function()
-            -- Memberikan jeda 0.5 detik agar engine game menyelesaikan proses internalnya
-            -- Ini mencegah sistem anti-cheat game mendeteksi teleportasi instan yang memicu Error 267
+            -- Jeda pengaman ultra-stabil untuk bypass proteksi ketat anti-cheat game (Error 267)
             task.wait(0.5)
             
-            local teleportOptions = Instance.new("TeleportOptions")
+            -- Ambil data TeleportService secara aman
+            local TeleportService = game:GetService("TeleportService")
             
             if game.JobId ~= "" then
-                -- Kunci target ke spesifik Server Instance ID yang sama saat ini
-                teleportOptions.ServerInstanceId = game.JobId
-            end
-            
-            -- Lakukan Teleport secara Async
-            local success, err = pcall(function()
-                TeleportService:TeleportAsync(game.PlaceId, {LocalPlayer}, teleportOptions)
-            end)
-            
-            -- Jalankan metode darurat cadangan jika teleport utama gagal dieksekusi
-            if not success then
-                warn("TeleportAsync Error: " .. tostring(err))
-                pcall(function()
-                    if game.JobId ~= "" then
-                        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-                    else
-                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
-                    end
-                end)
+                -- Mengunci dan memaksa masuk kembali ke server instance yang sekarang
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+            else
+                -- Fallback jika JobId kosong (kembali ke server dasar)
+                TeleportService:Teleport(game.PlaceId, LocalPlayer)
             end
         end)
-    end)
-end
+    end
+})
 -- =============================================================================
 -- [PANEL MENU 2]: TEXTBOX SCRIPT EDITOR ADVANCED (DENGAN LOGIKA AUTO-PLACEHOLDER)
 -- =============================================================================
