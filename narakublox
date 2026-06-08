@@ -1255,46 +1255,55 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- LOGIKA CLEAN REJOIN SYSTEM (100% SERVER YANG SAMA - ANTI KICK BYPASS)
+-- LOGIKA CLEAN REJOIN SYSTEM (HTTP SERVER LIST BYPASS - ANTI KICK 100%)
 -- =============================================================================
 if RejoinBtn then
     RejoinBtn.MouseButton1Click:Connect(function()
         task.spawn(function()
-            -- 1. Notifikasi awal ke player pakai sistem bawaan Roblox (Anti-Error / Nil Value)
-            pcall(function()
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "NARAKU REJOIN",
-                    Text = "Menghubungkan ulang ke server yang sama...",
-                    Duration = 3
-                })
+            -- Jeda tipis biar client gak overload saat request API Roblox
+            task.wait(0.3)
+            
+            -- Jalankan bypass pencarian server via API Roblox Http
+            local successBypass, errBypass = pcall(function()
+                local HttpService = game:GetService("HttpService")
+                local currentJobId = game.JobId
+                
+                -- Ambil list server aktif dari API resmi Roblox
+                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+                local serverList = HttpService:JSONDecode(game:HttpGet(url))
+                
+                local targetServerFound = false
+                
+                if serverList and serverList.data then
+                    for _, server in ipairs(serverList.data) do
+                        -- Validasi: Cari server ID yang persis sama dengan server lu sekarang
+                        if tostring(server.id) == tostring(currentJobId) then
+                            targetServerFound = true
+                            -- Masuk lewat jalur join instance normal (Anti-Cheat Bypass)
+                            TeleportService:TeleportToPlaceInstance(game.PlaceId, currentJobId, LocalPlayer)
+                            break
+                        end
+                    end
+                end
+                
+                -- Fallback Luar: Jika JobId tidak ditemukan atau server penuh, lempar pake Teleport biasa
+                if not targetServerFound then
+                    if currentJobId ~= "" then
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, currentJobId, LocalPlayer)
+                    else
+                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+                    end
+                end
             end)
-
-            -- 2. Jeda pengaman ultra-stabil untuk bypass proteksi ketat anti-cheat game (Error 267)
-            task.wait(0.5)
             
-            -- DEFINISI SERVICE (Memastikan service terpanggil dengan aman tanpa rely pada global variable)
-            local TS = game:GetService("TeleportService")
-            local LP = game:GetService("Players").LocalPlayer
-            
-            -- 3. Setup TeleportOptions modern untuk mengunci Server Instance ID saat ini
-            local teleportOptions = Instance.new("TeleportOptions")
-            if game.JobId ~= "" then
-                teleportOptions.ServerInstanceId = game.JobId
-            end
-            
-            -- 4. Eksekusi Utama: Teleport secara Async (Metode paling mulus saat ini)
-            local success, err = pcall(function()
-                TS:TeleportAsync(game.PlaceId, {LP}, teleportOptions)
-            end)
-            
-            -- 5. Mekanisme Darurat (Fallback): Jika TeleportAsync diblokir/gagal, pakai metode cadangan
-            if not success then
-                warn("TeleportAsync Gagal, Menjalankan Metode Cadangan:", err)
+            -- Jaga-jaga kalau executor lu gak support HttpService/HttpGet, pake cara cadangan utama lu
+            if not successBypass then
+                warn("Http Bypass Failed, Menggunakan Jalur Cadangan:", errBypass)
                 pcall(function()
                     if game.JobId ~= "" then
-                        TS:TeleportToPlaceInstance(game.PlaceId, game.JobId, LP)
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
                     else
-                        TS:Teleport(game.PlaceId, LP)
+                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
                     end
                 end)
             end
