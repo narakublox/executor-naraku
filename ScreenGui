@@ -729,37 +729,12 @@ LMG2L["ScriptBox_5a"]["Text"] = [[print('Hello World')]];
 LMG2L["ScriptBox_5a"]["BackgroundTransparency"] = 1;
 
 -- =============================================================================
--- ULTIMATE MAIN PANEL CORE ENGINE (100% PERFECT STATE, PROTECTED & ANTI-RESET)
--- =============================================================================
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-
--- 1. Verifikasi Keberadaan Array LMG2L
-if not LMG2L or type(LMG2L) ~= "table" then
-    warn("ERROR: Array LMG2L tidak ditemukan atau gagal dimuat!")
-    return
-end
-
--- 2. Inisialisasi Referensi Objek Sesuai Struktur File
-local ScreenGui    = LMG2L["ScreenGui_1"]       -- ScreenGui Utama
-local OpenButton   = LMG2L["OpenButton_2"]      -- Tombol Buka Panel
-local PanelUtama   = LMG2L["PanelUtama_6"]      -- Frame Vertikal Utama
-local MenuButton   = LMG2L["MenuButton_7"]      -- Tombol Menu
-local MainButton   = LMG2L["MainButton_30"]     -- Tombol Main
-local CloseButton  = LMG2L["CloseButton_33"]    -- Tombol Tutup Panel
-
--- Sub-Panel Main & Menu
-local PanelMain1   = LMG2L["PanelMain1_c"]      -- Panel Utama Atas
-local PanelMain2   = LMG2L["PanelMain2_1e"]     -- Panel Utama Bawah
-local PanelMenu1   = LMG2L["PanelMenu1_36"]     -- Panel Menu Atas
-local PanelMenu2   = PanelUtama:FindFirstChild("PanelMenu2") or PanelUtama:FindFirstChildOfClass("Frame")
-
--- =============================================================================
--- ULTIMATE MAIN PANEL CORE ENGINE (100% PERFECT STATE, CORE_GUI PROTECTED)
+-- ULTIMATE MAIN PANEL CORE ENGINE (100% PERFECT STATE, CORE_GUI & CLICK SOUND ACTIVE)
 -- =============================================================================
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local SoundService = game:GetService("SoundService") -- Tambahan untuk manajemen audio
 
 -- 1. Verifikasi Keberadaan Array LMG2L
 if not LMG2L or type(LMG2L) ~= "table" then
@@ -790,6 +765,21 @@ if ScreenGui and ScreenGui:IsA("ScreenGui") then
     -- Pindahkan Parent ke CoreGui agar kebal dari pembersihan JSON Studio Lite
     pcall(function()
         ScreenGui.Parent = CoreGui
+    end)
+end
+-- =============================================================================
+
+-- =============================================================================
+-- SYSTEM AUDIO: FUNGSI EMIT SOUND INSTAN TANPA REPOT UPLOAD ASET
+-- =============================================================================
+local function playClickSound()
+    task.spawn(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://6026984224" -- ID Sound milikmu
+        sound.Volume = 0.5                         -- Tingkat kekerasan suara (bisa kamu sesuaikan 0-1)
+        sound.PlayOnRemove = true                  -- Efek langsung bunyi saat object dihapus dari game
+        sound.Parent = SoundService                -- Dimasukkan ke SoundService agar terdengar global/lokal
+        sound:Destroy()                            -- Langsung dihancurkan setelah trigger berbunyi (Anti-Lag/Sampah Memory)
     end)
 end
 -- =============================================================================
@@ -899,6 +889,7 @@ end)
 
 -- 9. Logika Interaksi Kemunculan/Sembunyi Panel (Fade & Pop Up)
 CloseButton.MouseButton1Click:Connect(function()
+    playClickSound() -- << BUNYI SAAT TOMBOL TUTUP DIKLIK
     applyFlashEffect(CloseButton)
     
     local fadeMain = TweenService:Create(PanelUtama, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -918,6 +909,7 @@ CloseButton.MouseButton1Click:Connect(function()
 end)
 
 OpenButton.MouseButton1Click:Connect(function()
+    playClickSound() -- << BUNYI SAAT TOMBOL BUKA DIKLIK
     local shrinkOpen = TweenService:Create(OpenButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0)
     })
@@ -937,10 +929,12 @@ end)
 
 -- 10. Logika Tombol Navigasi Tab (Main & Menu)
 MenuButton.MouseButton1Click:Connect(function()
+    playClickSound() -- << BUNYI SAAT TAB MENU DIKLIK
     switchTab(false) -- Sembunyikan Main, Pindahkan Visual Warna ke MenuButton
 end)
 
 MainButton.MouseButton1Click:Connect(function()
+    playClickSound() -- << BUNYI SAAT TAB MAIN DIKLIK
     switchTab(true) -- Tampilkan Main, Pindahkan Visual Warna ke MainButton
 end)
 
@@ -998,7 +992,7 @@ task.spawn(function()
     end
 end)
 
-print("SYSTEM MAIN PANEL: 100% SUCCESS, CORE_GUI INJECTION BYPASS ACTIVE!")
+print("SYSTEM MAIN PANEL: 100% SUCCESS, CORE_GUI & AUDIO INTEGRATION LOGGED!")
 -- =============================================================================
 
 return LMG2L["ScreenGui_1"], require;
