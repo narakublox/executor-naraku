@@ -1452,34 +1452,46 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- SYSTEM PANEL MENU - CODE EDITOR & EXECUTION SYSTEM (FIXED 100%)
+-- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FINAL FULL VERSION)
 -- =============================================================================
-local PanelMenu        = LMG2L["PanelMenu_19"]
 local ScrollingFrame   = LMG2L["ScrollingFrame_2a"] 
 local ScriptBox        = LMG2L["ScriptBox_2c"]      
-
 local ExecuteButton    = LMG2L["ExecuteButton_1a"]  
 local ClearButton      = LMG2L["ClearButton_23"]    
 local SalinButton      = LMG2L["SalinClipBoardButton_26"] 
 
--- Konfigurasi
+local UIS = game:GetService("UserInputService")
+local DEFAULT_PLACEHOLDER = "print('Hello World')"
+
+-- 1. SETUP INITIAL
 ScriptBox.ClearTextOnFocus = false
 ScriptBox.MultiLine        = true
 ScriptBox.TextXAlignment   = Enum.TextXAlignment.Left
 ScriptBox.TextYAlignment   = Enum.TextYAlignment.Top
+ScriptBox.ClipsDescendants = false
+ScriptBox.Text             = DEFAULT_PLACEHOLDER
+ScriptBox.TextColor3       = Color3.fromRGB(150, 150, 150)
 
-local DEFAULT_PLACEHOLDER = "print('Hello World')"
-ScriptBox.Text = DEFAULT_PLACEHOLDER
-ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-
--- Memastikan ScrollingFrame aktif selamanya
-ScrollingFrame.Active = true
+ScrollingFrame.Active           = true
 ScrollingFrame.ScrollingEnabled = true
 
--- =============================================================================
--- LOGIKA PEMULIHAN TEKS, INDENTASI TAB, DAN AUTO-RESIZE CANVAS (FIXED)
--- =============================================================================
+-- 2. LOGIKA RESIZING (SANGAT STABIL)
+local function updateCanvas()
+    local textHeight = ScriptBox.TextBounds.Y
+    -- Memastikan ukuran canvas tidak pernah 0 dan mengikuti panjang teks
+    local minSize = 150
+    local newHeight = math.max(textHeight + 40, minSize)
+    
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, newHeight)
+    ScriptBox.Size            = UDim2.new(1, 0, 0, newHeight)
+    
+    -- Auto-scroll ke bawah saat mengetik
+    if ScriptBox:IsFocused() then
+        ScrollingFrame.CanvasPosition = Vector2.new(0, math.max(0, newHeight - ScrollingFrame.AbsoluteWindowSize.Y))
+    end
+end
 
+-- 3. EVENT HANDLING (FOCUS & INPUT)
 ScriptBox.Focused:Connect(function()
     if ScriptBox.Text == DEFAULT_PLACEHOLDER then
         ScriptBox.Text = ""
@@ -1487,85 +1499,62 @@ ScriptBox.Focused:Connect(function()
     end
 end)
 
-ScriptBox:GetPropertyChangedSignal("Text"):Connect(function()
-    if ScriptBox.Text == "" and not ScriptBox:IsFocused() then
+ScriptBox:GetPropertyChangedSignal("TextBounds"):Connect(updateCanvas)
+
+ScriptBox.FocusLost:Connect(function()
+    local clean = ScriptBox.Text:gsub("%s+", "")
+    if clean == "" then
         ScriptBox.Text = DEFAULT_PLACEHOLDER
         ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-    end
-
-    -- FIX: Jangan pernah buat CanvasSize 0, minimal 100 agar scroll selalu bisa diakses
-    if ScriptBox.Text ~= DEFAULT_PLACEHOLDER and ScriptBox.Text ~= "" then
-        local textHeight = ScriptBox.TextBounds.Y
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(textHeight + 50, 100))
-    else
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 100)
+        updateCanvas()
     end
 end)
 
-ScriptBox.FocusLost:Connect(function(enterPressed)
-    if string.gsub(ScriptBox.Text, "%s+", "") == "" then
-        ScriptBox.Text = DEFAULT_PLACEHOLDER
-        ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 100)
-    end
-end)
-
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
+UIS.InputBegan:Connect(function(input)
     if ScriptBox:IsFocused() and input.KeyCode == Enum.KeyCode.Tab then
         ScriptBox.Text = ScriptBox.Text .. "    "
-        task.defer(function()
-            ScriptBox:CaptureFocus()
-        end)
+        task.defer(function() ScriptBox:CaptureFocus() end)
     end
 end)
 
--- =============================================================================
--- SISTEM AKSI UTAMA (EXECUTE, CLEAR, DAN COPY - NO SOUND, BYPASS READY)
--- =============================================================================
-
+-- 4. EXECUTION ENGINE (FULL BYPASS)
 ExecuteButton.MouseButton1Click:Connect(function()
-    local codeToExecute = ScriptBox.Text
-    if codeToExecute == "" or codeToExecute == DEFAULT_PLACEHOLDER then return end
+    local code = ScriptBox.Text
+    if code == "" or code == DEFAULT_PLACEHOLDER then return end
     
-    -- INTEGRASI BYPASS: Memaksa env executor ke dalam fungsi
     task.spawn(function()
+        -- Injection bypass yang memaksa environment executor
         local env = getgenv and getgenv() or getfenv()
-        local bypassEnv = setmetatable({
+        local bypass = setmetatable({
             require = env.require or require,
             loadstring = env.loadstring or loadstring
         }, {__index = env})
         
-        local success, func = pcall(loadstring, codeToExecute)
+        local success, func = pcall(loadstring, code)
         if success and func then
-            setfenv(func, bypassEnv)
-            local runSuccess, runError = pcall(func)
-            if not runSuccess then
-                warn("[Naraku Error]: " .. tostring(runError))
-            end
+            setfenv(func, bypass)
+            local rSuccess, rErr = pcall(func)
+            if not rSuccess then warn("[Naraku Exec Error]: " .. tostring(rErr)) end
         else
             warn("[Naraku Compile Error]: " .. tostring(func))
         end
     end)
 end)
 
+-- 5. CLEAR & COPY (CLEAN)
 ClearButton.MouseButton1Click:Connect(function()
     ScriptBox.Text = DEFAULT_PLACEHOLDER
     ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 100)
+    updateCanvas()
 end)
 
 SalinButton.MouseButton1Click:Connect(function()
-    local codeToCopy = ScriptBox.Text
-    if codeToCopy == "" or codeToCopy == DEFAULT_PLACEHOLDER then return end
-    
-    if setclipboard then
-        setclipboard(codeToCopy)
-    elseif toclipboard then
-        toclipboard(codeToCopy)
-    else
-        warn("[Naraku Warning]: Executor tidak mendukung Clipboard.")
+    if ScriptBox.Text ~= DEFAULT_PLACEHOLDER and setclipboard then
+        setclipboard(ScriptBox.Text)
     end
 end)
+
+-- INIT
+updateCanvas()
 
 return LMG2L["ScreenGui_1"], require;
