@@ -1452,7 +1452,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FINAL FIXED)
+-- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FINAL 100% FIXED)
 -- =============================================================================
 local ScrollingFrame   = LMG2L["ScrollingFrame_2a"] 
 local ScriptBox        = LMG2L["ScriptBox_2c"]      
@@ -1463,26 +1463,25 @@ local SalinButton      = LMG2L["SalinClipBoardButton_26"]
 local UIS = game:GetService("UserInputService")
 local DEFAULT_PLACEHOLDER = "print('Hello World')"
 
--- 1. SETUP INITIAL (GUNAKAN AUTOMATICSIZE)
+-- 1. SETUP INITIAL
 ScriptBox.ClearTextOnFocus = false
 ScriptBox.MultiLine        = true
-ScriptBox.TextXAlignment   = Enum.TextXAlignment.Left
-ScriptBox.TextYAlignment   = Enum.TextYAlignment.Top
 ScriptBox.ClipsDescendants = false
-ScriptBox.AutomaticSize    = Enum.AutomaticSize.Y -- KUNCI AGAR TIDAK TERPOTONG
+ScriptBox.TextWrapped      = true
 ScriptBox.Text             = DEFAULT_PLACEHOLDER
 ScriptBox.TextColor3       = Color3.fromRGB(150, 150, 150)
 
-ScrollingFrame.Active           = true
-ScrollingFrame.ScrollingEnabled = true
-ScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y -- KUNCI AGAR SCROLLING SESUAI
-
--- 2. LOGIKA RESIZING (CUKUP UPDATE CANVAS SAJA)
+-- 2. LOGIKA RESIZING (SINKRONISASI BOX DAN CANVAS)
 local function updateCanvas()
-    -- Tidak perlu lagi memaksa ScriptBox.Size secara manual
-    -- Karena AutomaticSize Y sudah menangani itu agar tidak terpotong
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0) 
+    -- Menggunakan logika yang sudah terbukti oke
+    local dynamicHeight = math.max(202, ScriptBox.TextBounds.Y + 25)
+    
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, dynamicHeight)
+    ScriptBox.Size = UDim2.new(1, -6, 0, dynamicHeight)
 end
+
+-- Hook event untuk resize
+ScriptBox:GetPropertyChangedSignal("TextBounds"):Connect(updateCanvas)
 
 -- 3. EVENT HANDLING (FOCUS & INPUT)
 ScriptBox.Focused:Connect(function()
@@ -1493,48 +1492,42 @@ ScriptBox.Focused:Connect(function()
 end)
 
 ScriptBox.FocusLost:Connect(function()
-    local clean = ScriptBox.Text:gsub("%s+", "")
-    if clean == "" then
+    local cleanText = ScriptBox.Text:gsub("^%s*(.-)%s*$", "%1")
+    if cleanText == "" then
         ScriptBox.Text = DEFAULT_PLACEHOLDER
         ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-    end
-end)
-
-UIS.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if ScriptBox:IsFocused() and input.KeyCode == Enum.KeyCode.Tab then
-        ScriptBox.Text = ScriptBox.Text .. "    "
-        task.defer(function() ScriptBox:CaptureFocus() end)
+        updateCanvas()
     end
 end)
 
 -- 4. EXECUTION ENGINE (FULL BYPASS)
 ExecuteButton.MouseButton1Click:Connect(function()
     local code = ScriptBox.Text
-    if code == "" or code == DEFAULT_PLACEHOLDER then return end
-    
-    task.spawn(function()
-        local env = getgenv and getgenv() or getfenv()
-        local bypass = setmetatable({
-            require = env.require or require,
-            loadstring = env.loadstring or loadstring
-        }, {__index = env})
-        
-        local success, func = pcall(loadstring, code)
-        if success and func then
-            setfenv(func, bypass)
-            local rSuccess, rErr = pcall(func)
-            if not rSuccess then warn("[Naraku Exec Error]: " .. tostring(rErr)) end
-        else
-            warn("[Naraku Compile Error]: " .. tostring(func))
-        end
-    end)
+    if code ~= "" and code ~= DEFAULT_PLACEHOLDER then
+        task.spawn(function()
+            local env = getgenv and getgenv() or getfenv()
+            local bypass = setmetatable({
+                require = env.require or require,
+                loadstring = env.loadstring or loadstring
+            }, {__index = env})
+            
+            local success, func = pcall(loadstring, code)
+            if success and func then
+                setfenv(func, bypass)
+                local rSuccess, rErr = pcall(func)
+                if not rSuccess then warn("[Naraku Exec Error]: " .. tostring(rErr)) end
+            else
+                warn("[Naraku Compile Error]: " .. tostring(func))
+            end
+        end)
+    end
 end)
 
 -- 5. CLEAR & COPY
 ClearButton.MouseButton1Click:Connect(function()
     ScriptBox.Text = DEFAULT_PLACEHOLDER
     ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+    updateCanvas()
 end)
 
 SalinButton.MouseButton1Click:Connect(function()
@@ -1542,5 +1535,8 @@ SalinButton.MouseButton1Click:Connect(function()
         setclipboard(ScriptBox.Text)
     end
 end)
+
+-- Inisialisasi awal
+updateCanvas()
 
 return LMG2L["ScreenGui_1"], require;
