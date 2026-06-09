@@ -1149,6 +1149,306 @@ LMG2L["UICorner_86"] = Instance.new("UICorner", LMG2L["ADDButton_85"]);
 LMG2L["UIGradient_87"] = Instance.new("UIGradient", LMG2L["ADDButton_85"]);
 LMG2L["UIGradient_87"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(107, 107, 107)),ColorSequenceKeypoint.new(0.524, Color3.fromRGB(243, 243, 243)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(95, 95, 95))};
 
+-- =============================================================================
+-- ULTIMATE MAIN PANEL CORE ENGINE V2 (STICKY DRAG, TAB MEMORY & SMOOTH GLOW ACTIVE)
+-- =============================================================================
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local SoundService = game:GetService("SoundService")
 
+-- 1. Inisialisasi Referensi Objek Sesuai Struktur File Asli LMG2L Kamu
+local ScreenGui    = LMG2L["ScreenGui_1"]       
+local OpenButton   = LMG2L["OpenButton_2"]      
+local PanelUtama   = LMG2L["PanelUtama_6"]      
+
+local MenuButton   = LMG2L["MenuButton_a"]      
+local MainButton   = LMG2L["MainButton_f"]      
+local InfoButton   = LMG2L["InfoButton_7"]      
+local UploadButton = LMG2L["UploadButton_16"]    
+local CloseButton  = LMG2L["CloseButton_12"]    
+
+local PanelMain    = LMG2L["PanelMain_2d"]      
+local PanelMenu    = LMG2L["PanelMenu_19"]      
+local PanelInfo    = LMG2L["PanelInfo_43"]      
+local PanelUpload  = LMG2L["PanelUpload_76"]    
+
+-- =============================================================================
+-- SYSTEM PROTEKSI ANTI-HILANG
+-- =============================================================================
+if ScreenGui and ScreenGui:IsA("ScreenGui") then
+    ScreenGui.ResetOnSpawn = false 
+    pcall(function() ScreenGui.Parent = CoreGui end)
+end
+
+-- =============================================================================
+-- SYSTEM AUDIO & ADVANCED GLOW/SLIME EFFECT GENERATOR
+-- =============================================================================
+local function playClickSound()
+    task.spawn(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://6026984224" 
+        sound.Volume = 0.55                         
+        sound.PlayOnRemove = true                  
+        sound.Parent = SoundService                
+        sound:Destroy()                            
+    end)
+end
+
+-- Efek klik membal premium (Slime Feedback)
+local function applySlimeEffect(button)
+    if not button then return end
+    local originalSize = button.Size
+    
+    -- Hitung ukuran melar sedikit melebar (efek slime)
+    local stretchSize = UDim2.new(originalSize.X.Scale, originalSize.X.Offset + 6, originalSize.Y.Scale, originalSize.Y.Offset - 2)
+    
+    TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = stretchSize,
+        BackgroundTransparency = 0.3
+    }):Play()
+    
+    task.delay(0.1, function()
+        TweenService:Create(button, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = originalSize,
+            BackgroundTransparency = button:GetAttribute("IsActive") and 0.5 or 0 -- Sesuai state aktifnya
+        }):Play()
+    end)
+end
+
+-- =============================================================================
+-- LOGIKA NAVIGASI TAB STATE MEMORY & TRANSISI IN-PLACE
+-- =============================================================================
+
+-- Simpan Properti Bawaan Asli Tombol
+local originalButtonStates = {
+    [MainButton]   = {color = MainButton.BackgroundColor3, trans = MainButton.BackgroundTransparency, size = MainButton.Size},
+    [MenuButton]   = {color = MenuButton.BackgroundColor3, trans = MenuButton.BackgroundTransparency, size = MenuButton.Size},
+    [InfoButton]   = {color = InfoButton.BackgroundColor3, trans = InfoButton.BackgroundTransparency, size = InfoButton.Size},
+    [UploadButton] = {color = UploadButton.BackgroundColor3, trans = UploadButton.BackgroundTransparency, size = UploadButton.Size}
+}
+
+-- Variabel Memory untuk mengingat Tab mana yang sedang aktif terakhir kali
+local currentActiveButton = MainButton 
+
+PanelUtama.Visible = true
+PanelUtama.BackgroundTransparency = 0.2 
+OpenButton.Visible = false 
+
+-- Ukuran default bulat pas Open Button dari struktur
+local OPEN_BUTTON_TARGET_SIZE = UDim2.new(0, 35, 0, 35) 
+OpenButton.Size = OPEN_BUTTON_TARGET_SIZE
+
+-- Fungsi Mengatur Transisi Glow Warna & Bentuk Tombol Secara Premium (Gaya Smooth Slime)
+local function updateTabVisual(activeButton)
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    
+    for btn, orig in pairs(originalButtonStates) do
+        if btn == activeButton then
+            btn:SetAttribute("IsActive", true)
+            -- Efek Glow Putih Transparan Lembut & Agak Melar Sedikit Menandakan Aktif
+            TweenService:Create(btn, tweenInfo, {
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                BackgroundTransparency = 0.5,
+                Size = UDim2.new(orig.size.X.Scale, orig.size.X.Offset + 4, orig.size.Y.Scale, orig.size.Y.Offset)
+            }):Play()
+        else
+            btn:SetAttribute("IsActive", false)
+            -- Kembalikan tombol tidak aktif ke bentuk dan ukuran aslinya secara smooth
+            TweenService:Create(btn, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = orig.color,
+                BackgroundTransparency = orig.trans,
+                Size = orig.size
+            }):Play()
+        end
+    end
+end
+
+-- Pengendali Visibilitas Sub-Panel Konten Utama (In-Place Transisi Tanpa Geser)
+local function switchTab(activeButton)
+    if not activeButton then return end
+    
+    -- Simpan ke memori sistem sebagai tab terakhir yang dibuka
+    currentActiveButton = activeButton 
+    
+    PanelMain.Visible   = (activeButton == MainButton)
+    PanelMenu.Visible   = (activeButton == MenuButton)
+    PanelInfo.Visible   = (activeButton == InfoButton)
+    PanelUpload.Visible = (activeButton == UploadButton)
+    
+    updateTabVisual(activeButton)
+end
+
+-- SET DEFAULT AWAL: Eksekusi pertama kali langsung menyalakan Main Panel
+switchTab(MainButton)
+
+-- =============================================================================
+-- STABLE MEMORY DRAGGING SYSTEM (OPEN BUTTON PERMANENT POSITION)
+-- =============================================================================
+OpenButton.Active = true
+local dragging, dragInput, dragStart, startPosition
+local hasBeenDragged = false -- Penanda jika user sudah memindahkan posisi tombol
+
+OpenButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPosition = OpenButton.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        hasBeenDragged = true -- Kunci posisi baru, matikan fungsi auto-reset default position
+        local delta = input.Position - dragStart
+        OpenButton.Position = UDim2.new(
+            startPosition.X.Scale, startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale, startPosition.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- =============================================================================
+-- LOGIKA INTERAKSI CLOSE & OPEN BUTTON (TAB MEMORY & POSISI DRAG TETAP)
+-- =============================================================================
+CloseButton.MouseButton1Click:Connect(function()
+    playClickSound() 
+    applySlimeEffect(CloseButton)
+    
+    -- Sembunyikan semua sub-panel konten saat ditutup total agar visual bersih
+    PanelMain.Visible = false
+    PanelMenu.Visible = false
+    PanelInfo.Visible = false
+    PanelUpload.Visible = false
+    updateTabVisual(nil)
+    
+    local fadeMain = TweenService:Create(PanelUtama, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 1
+    })
+    fadeMain:Play()
+    
+    fadeMain.Completed:Connect(function()
+        PanelUtama.Visible = false
+        OpenButton.Visible = true
+        
+        -- Animasi muncul membal (Pop-up Back) di koordinat drag terakhirnya tanpa berubah posisi koordinat!
+        OpenButton.Size = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(OpenButton, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = OPEN_BUTTON_TARGET_SIZE
+        }):Play()
+    end)
+end)
+
+OpenButton.MouseButton1Click:Connect(function()
+    playClickSound() 
+    
+    -- Efek menyusut halus langsung di tempat koordinat drag terakhirnya
+    local shrinkOpen = TweenService:Create(OpenButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0)
+    })
+    shrinkOpen:Play()
+    
+    shrinkOpen.Completed:Connect(function()
+        OpenButton.Visible = false
+        OpenButton.Size = OPEN_BUTTON_TARGET_SIZE -- Kembalikan size ke awal untuk trigger selanjutnya
+        
+        PanelUtama.BackgroundTransparency = 1
+        PanelUtama.Visible = true
+        
+        -- MEMORY CALL: Buka kembali sub-panel berdasarkan tombol aktif terakhir sebelum diclose!
+        switchTab(currentActiveButton)
+        
+        TweenService:Create(PanelUtama, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0.2
+        }):Play()
+    end)
+end)
+
+-- =============================================================================
+-- SAMBUNGAN EVENT KLIK TOMBOL NAVIGASI TAB DENGAN HOVER & SLIME FEEDBACK
+-- =============================================================================
+MainButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    applySlimeEffect(MainButton)
+    switchTab(MainButton)
+end)
+
+MenuButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    applySlimeEffect(MenuButton)
+    switchTab(MenuButton)
+end)
+
+InfoButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    applySlimeEffect(InfoButton)
+    switchTab(InfoButton)
+end)
+
+UploadButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    applySlimeEffect(UploadButton)
+    switchTab(UploadButton)
+end)
+
+-- =============================================================================
+-- AUTOMATED UIGRADIENT CONTROLLER ENGINE (SHINE & ROTATION EFFECTS)
+-- =============================================================================
+local strokeGradients = {}
+local buttonShineGradients = {}
+
+local function classifyGradients(object)
+    for _, desc in ipairs(object:GetDescendants()) do
+        if desc:IsA("UIGradient") then
+            if desc.Parent and desc.Parent:IsA("UIStroke") then
+                table.insert(strokeGradients, desc)
+            elseif desc.Parent and (desc.Parent:IsA("ImageButton") or desc.Parent:IsA("TextButton")) then
+                table.insert(buttonShineGradients, desc)
+            end
+        end
+    end
+end
+
+if ScreenGui then classifyGradients(ScreenGui) end
+
+-- Loop Thread 1: Efek Rotasi Berputar Otomatis Khusus UIGradient Pada UIStroke
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        for i = 1, #strokeGradients do
+            local grad = strokeGradients[i]
+            if grad and grad.Parent then
+                grad.Rotation = (grad.Rotation + 2) % 360
+            end
+        end
+        task.wait(0.02)
+    end
+end)
+
+-- Loop Thread 2: Efek Mengkilap Bergerak Mulus Khusus UIGradient Pada Tombol
+task.spawn(function()
+    for _, grad in ipairs(buttonShineGradients) do
+        grad.Offset = Vector2.new(-1, 0)
+    end
+    
+    while ScreenGui and ScreenGui.Parent do
+        for progress = -100, 100, 4 do
+            local currentOffset = progress / 100
+            for i = 1, #buttonShineGradients do
+                local grad = buttonShineGradients[i]
+                if grad and grad.Parent then
+                    grad.Offset = Vector2.new(currentOffset, 0)
+                end
+            end
+            task.wait(0.02)
+        end
+        task.wait(1.5) 
+    end
+end)
 
 return LMG2L["ScreenGui_1"], require;
