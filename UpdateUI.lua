@@ -1451,4 +1451,132 @@ task.spawn(function()
     end
 end)
 
+-- =============================================================================
+-- SYSTEM PANEL MENU - CODE EDITOR & EXECUTION SYSTEM (FIXED INDEX)
+-- =============================================================================
+-- 1. Inisialisasi Referensi Komponen Sesuai Berkas Dokumentasi Asli Kamu
+local PanelMenu        = LMG2L["PanelMenu_19"]
+local ScrollingFrame   = LMG2L["ScrollingFrame_2a"] -- Wadah Scroll Script Box
+local ScriptBox        = LMG2L["ScriptBox_2c"]      -- TextBox Tempat Menulis Code
+
+-- Tombol Aksi di PanelMenu Berdasarkan Indeks Asli
+local ExecuteButton    = LMG2L["ExecuteButton_1a"]  
+local ClearButton      = LMG2L["ClearButton_23"]    
+local SalinButton      = LMG2L["SalinClipBoardButton_26"] 
+
+-- 2. Konfigurasi Standarisasi Code Editor pada Script Box
+ScriptBox.ClearTextOnFocus = false  -- Mencegah code terhapus otomatis saat diklik
+ScriptBox.MultiLine        = true   -- Mendukung enter / banyak baris code
+ScriptBox.TextXAlignment   = Enum.TextXAlignment.Left
+ScriptBox.TextYAlignment   = Enum.TextYAlignment.Top
+
+-- Pengaturan Awal Default Teks Placeholder Memory
+local DEFAULT_PLACEHOLDER = "print('Hello World')"
+ScriptBox.Text = DEFAULT_PLACEHOLDER
+ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150) -- Efek warna abu-abu samar
+
+-- =============================================================================
+-- LOGIKA PEMULIHAN TEKS, INDENTASI TAB, DAN AUTO-RESIZE CANVAS
+-- =============================================================================
+
+-- Ketika ScriptBox diklik/difokuskan untuk mulai mengetik script
+ScriptBox.Focused:Connect(function()
+    if ScriptBox.Text == DEFAULT_PLACEHOLDER then
+        ScriptBox.Text = ""
+        ScriptBox.TextColor3 = Color3.fromRGB(255, 255, 255) -- Kembali ke warna teks utama kamu
+    end
+end)
+
+-- Memantau perubahan teks secara dinamis (Menangani hapus manual & auto-resize canvas)
+ScriptBox:GetPropertyChangedSignal("Text"):Connect(function()
+    -- Fitur Pemulihan Instan: Jika teks kosong total (tidak ada karakter sama sekali)
+    -- dan user sedang tidak memfokuskan TextBox (tidak sedang mengetik), pulihkan teks bawaan
+    if ScriptBox.Text == "" and not ScriptBox:IsFocused() then
+        ScriptBox.Text = DEFAULT_PLACEHOLDER
+        ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+    end
+
+    -- Mengatur tinggi Canvas ScrollingFrame secara dinamis mengikuti panjang text codingan
+    if ScriptBox.Text ~= DEFAULT_PLACEHOLDER and ScriptBox.Text ~= "" then
+        local textHeight = ScriptBox.TextBounds.Y
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, textHeight + 50)
+    else
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    end
+end)
+
+-- Ketika user selesai berinteraksi atau mengklik luar area ScriptBox
+ScriptBox.FocusLost:Connect(function(enterPressed)
+    -- Jika teks kosong atau hanya berisi spasi/tab kosong setelah diketik, pulihkan tulisan awal
+    if string.gsub(ScriptBox.Text, "%s+", "") == "" then
+        ScriptBox.Text = DEFAULT_PLACEHOLDER
+        ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+    end
+end)
+
+-- Fitur Tab Indentasi (Mengetik 4 spasi saat menekan TAB layaknya code editor asli tanpa hilangkan fokus)
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if ScriptBox:IsFocused() and input.KeyCode == Enum.KeyCode.Tab then
+        ScriptBox.Text = ScriptBox.Text .. "    "
+        task.defer(function()
+            ScriptBox:CaptureFocus()
+        end)
+    end
+end)
+
+-- =============================================================================
+-- SISTEM AKSI UTAMA TOMBOL (EXECUTE, CLEAR, DAN COPY CLIPBOARD)
+-- =============================================================================
+
+-- 1. EXECUTE BUTTON: Menjalankan skrip yang dimasukkan ke dalam Script Box
+ExecuteButton.MouseButton1Click:Connect(function()
+    if typeof(playClickSound) == "function" then playClickSound() end
+    if typeof(applySlimeEffect) == "function" then applySlimeEffect(ExecuteButton) end
+    
+    local codeToExecute = ScriptBox.Text
+    if codeToExecute == "" or codeToExecute == DEFAULT_PLACEHOLDER then return end
+    
+    -- Eksekusi aman menggunakan loadstring yang dibungkus pcall agar anti-crash
+    task.spawn(function()
+        local success, func = pcall(loadstring, codeToExecute)
+        if success and func then
+            local runSuccess, runError = pcall(func)
+            if not runSuccess then
+                warn("[Naraku Error]: " .. tostring(runError))
+            end
+        else
+            warn("[Naraku Compile Error]: " .. tostring(func))
+        end
+    end)
+end)
+
+-- 2. CLEAR BUTTON: Menghapus seluruh skrip di dalam Script Box dan langsung memulihkan teks default
+ClearButton.MouseButton1Click:Connect(function()
+    if typeof(playClickSound) == "function" then playClickSound() end
+    if typeof(applySlimeEffect) == "function" then applySlimeEffect(ClearButton) end
+    
+    ScriptBox.Text = DEFAULT_PLACEHOLDER
+    ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+end)
+
+-- 3. SALIN CLIPBOARD BUTTON: Menyalin keseluruhan isi kode dari Script Box ke clipboard perangkat
+SalinButton.MouseButton1Click:Connect(function()
+    if typeof(playClickSound) == "function" then playClickSound() end
+    if typeof(applySlimeEffect) == "function" then applySlimeEffect(SalinButton) end
+    
+    local codeToCopy = ScriptBox.Text
+    if codeToCopy == "" or codeToCopy == DEFAULT_PLACEHOLDER then return end
+    
+    -- Menggunakan API universal bawaan environment executor eksternal
+    if setclipboard then
+        setclipboard(codeToCopy)
+    elseif toclipboard then
+        toclipboard(codeToCopy)
+    else
+        warn("[Naraku Warning]: Executor perangkat tidak mendukung fungsi eksternal Clipboard.")
+    end
+end)
+
 return LMG2L["ScreenGui_1"], require;
