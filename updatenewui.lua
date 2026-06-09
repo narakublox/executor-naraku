@@ -1139,7 +1139,224 @@ LMG2L["IconInfo_86"]["Position"] = UDim2.new(0, 4, 0, 4);
 -- Players.EXDestructor01.PlayerGui.ScreenGui.PanelUtama.InfoButton.UICorner
 LMG2L["UICorner_87"] = Instance.new("UICorner", LMG2L["InfoButton_85"]);
 
+-- =============================================================================
+-- NARAKU BLOX CORE ENGINE - FIXED TOTAL (ANTI NUMPUK & COCOK 100% DENGAN UI)
+-- =============================================================================
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local SoundService = game:GetService("SoundService")
 
+-- 1. Verifikasi Data Array Utama
+if not LMG2L or type(LMG2L) ~= "table" then
+    warn("ERROR: Data UI LMG2L tidak ditemukan!")
+    return
+end
 
+-- 2. Inisialisasi Sesuai ID Instance Asli di File updatenewui.txt
+local ScreenGui     = LMG2L["ScreenGui_1"]       -- [cite: 386]
+local OpenButton    = LMG2L["OpenButton_2"]      -- [cite: 387]
+local PanelUtama    = LMG2L["PanelUtama_6"]      -- [cite: 413]
+local CloseButton   = LMG2L["CloseButton_7f"]    -- [cite: 786]
+
+-- Tombol Navigasi Samping (Main Button Utama)
+local MenuButton    = LMG2L["MenuButton_60"]     -- [cite: 710]
+local MainButton    = LMG2L["MainButton_82"]     
+local InfoButton    = LMG2L["InfoButton_85"]     
+local UploadButton  = LMG2L["UploadButton_7c"]    
+
+-- Panel Pasangan Masing-Masing Tombol
+local PanelMain     = LMG2L["PanelMain_65"]      -- 
+local PanelMenu     = LMG2L["PanelMenu_4c"]      -- [cite: 666]
+local PanelInfo     = LMG2L["PanelInfo_19"]      -- [cite: 830]
+local PanelUpload   = LMG2L["PanelUpload_7"]     -- [cite: 806]
+
+-- Proteksi Masuk ke CoreGui
+if ScreenGui and ScreenGui:IsA("ScreenGui") then
+    ScreenGui.ResetOnSpawn = false 
+    pcall(function() ScreenGui.Parent = CoreGui end)
+end
+
+-- Efek Audio Klik
+local function playClickSound()
+    task.spawn(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://6026984224" 
+        sound.Volume = 0.5                         
+        sound.PlayOnRemove = true                  
+        sound.Parent = SoundService                
+        sound:Destroy()                            
+    end)
+end
+
+-- Simpan Warna Awal Tombol Navigasi untuk Efek Visual Seleksi Tab
+local originalColors = {
+    [MainButton]   = {Color = MainButton.BackgroundColor3, Trans = MainButton.BackgroundTransparency},
+    [MenuButton]   = {Color = MenuButton.BackgroundColor3, Trans = MenuButton.BackgroundTransparency},
+    [InfoButton]   = {Color = InfoButton.BackgroundColor3, Trans = InfoButton.BackgroundTransparency},
+    [UploadButton] = {Color = UploadButton.BackgroundColor3, Trans = UploadButton.BackgroundTransparency}
+}
+
+-- =============================================================================
+-- FUNGSI UTAMA: MANAJEMEN TAB PANEL (ANTI OVERLAP / SALING TINDIH)
+-- =============================================================================
+local function bukaTabTerpilih(tombolAktif, panelAktif)
+    -- 1. Tutup SEMUA panel tanpa terkecuali agar tidak saling menumpuk di layar!
+    if PanelMain then PanelMain.Visible = false end
+    if PanelMenu then PanelMenu.Visible = false end
+    if PanelInfo then PanelInfo.Visible = false end
+    if PanelUpload then PanelUpload.Visible = false end
+    
+    -- 2. Kembalikan semua warna background tombol navigasi ke kondisi semula
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    for tombol, dataAwal in pairs(originalColors) do
+        TweenService:Create(tombol, tweenInfo, {BackgroundColor3 = dataAwal.Color, BackgroundTransparency = dataAwal.Trans}):Play()
+    end
+    
+    -- 3. Nyalakan panel yang ditargetkan oleh tombol yang diklik
+    if panelAktif then
+        panelAktif.Visible = true
+    end
+    
+    -- 4. Beri efek highlight/penerangan pada tombol yang sedang aktif saat ini
+    if tombolAktif then
+        TweenService:Create(tombolAktif, tweenInfo, {BackgroundColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 0.4}):Play()
+    end
+end
+
+-- =============================================================================
+-- EVENT LISTENERS: KLIK TOMBOL UNTUK MEMBUKA PANEL MASING-MASING
+-- =============================================================================
+
+-- KLIK MAIN BUTTON -> PANEL MAIN KELUAR / MEMBUKA!
+MainButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    bukaTabTerpilih(MainButton, PanelMain)
+end)
+
+-- KLIK MENU BUTTON -> PANEL MENU KELUAR / MEMBUKA!
+MenuButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    bukaTabTerpilih(MenuButton, PanelMenu)
+end)
+
+-- KLIK INFO BUTTON -> PANEL INFO KELUAR / MEMBUKA!
+InfoButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    bukaTabTerpilih(InfoButton, PanelInfo)
+end)
+
+-- KLIK UPLOAD BUTTON -> PANEL UPLOAD KELUAR / MEMBUKA!
+UploadButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    bukaTabTerpilih(UploadButton, PanelUpload)
+end)
+
+-- =============================================================================
+-- MANAGEMENT KONDISI AWAL (FIRST EXECUTION)
+-- =============================================================================
+PanelUtama.Visible = true
+PanelUtama.BackgroundTransparency = 0.2
+OpenButton.Visible = false
+
+-- SAAT DI-EXECUTE, LANGSUNG OTOMATIS BUKA TAB 'MAIN' BIAR GAK KOSONG DAN GAK GAIB
+bukaTabTerpilih(MainButton, PanelMain)
+
+-- =============================================================================
+-- SCRIPT PENDUKUNG: CLOSE, OPEN, DRAG, & GRADIENT LOOP (TETAP TERJAGA)
+-- =============================================================================
+CloseButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    -- Sembunyikan panel aktif saat close
+    if PanelMain then PanelMain.Visible = false end
+    if PanelMenu then PanelMenu.Visible = false end
+    if PanelInfo then PanelInfo.Visible = false end
+    if PanelUpload then PanelUpload.Visible = false end
+    
+    local fadeTween = TweenService:Create(PanelUtama, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
+    fadeTween:Play()
+    fadeTween.Completed:Connect(function()
+        PanelUtama.Visible = false
+        OpenButton.Visible = true
+        OpenButton.Size = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(OpenButton, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 35, 0, 35)}):Play()
+    end)
+end)
+
+OpenButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    local shrinkOpen = TweenService:Create(OpenButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+    shrinkOpen:Play()
+    shrinkOpen.Completed:Connect(function()
+        OpenButton.Visible = false
+        PanelUtama.BackgroundTransparency = 1
+        PanelUtama.Visible = true
+        
+        local openTween = TweenService:Create(PanelUtama, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.2})
+        openTween:Play()
+        openTween.Completed:Connect(function()
+            bukaTabTerpilih(MainButton, PanelMain) -- Buka default ke PanelMain lagi pas UI dibuka kembali
+        end)
+    end)
+end)
+
+-- Sistem Dragging untuk OpenButton
+OpenButton.Active = true
+local dragging, dragStart, startPosition
+OpenButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPosition = OpenButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        OpenButton.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+    end
+end)
+
+-- UIGradient Anim Loop Engine
+local strokeGradients, buttonShineGradients = {}, {}
+local function classifyGradients(object)
+    for _, desc in ipairs(object:GetDescendants()) do
+        if desc:IsA("UIGradient") then
+            if desc.Parent and desc.Parent:IsA("UIStroke") then table.insert(strokeGradients, desc)
+            elseif desc.Parent and (desc.Parent:IsA("ImageButton") or desc.Parent:IsA("TextButton")) then table.insert(buttonShineGradients, desc) end
+        end
+    end
+end
+if ScreenGui then classifyGradients(ScreenGui) end
+
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        for i = 1, #strokeGradients do
+            local grad = strokeGradients[i]
+            if grad and grad.Parent then grad.Rotation = (grad.Rotation + 2) % 360 end
+        end
+        task.wait(0.02)
+    end
+end)
+
+task.spawn(function()
+    for _, grad in ipairs(buttonShineGradients) do grad.Offset = Vector2.new(-1, 0) end
+    while ScreenGui and ScreenGui.Parent do
+        for progress = -100, 100, 4 do
+            local currentOffset = progress / 100
+            for i = 1, #buttonShineGradients do
+                local grad = buttonShineGradients[i]
+                if grad and grad.Parent then grad.Offset = Vector2.new(currentOffset, 0) end
+            end
+           task.wait(0.02)
+        end
+        task.wait(1.5)
+    end
+end)
+
+print("NARAKU BLOX - 100% PRECISE ANALYSIS FIXED SUCCESSFUL!")
 
 return LMG2L["ScreenGui_1"], require;
