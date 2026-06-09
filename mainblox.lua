@@ -1452,7 +1452,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- SYSTEM PANEL MENU - EDITOR & EXECUTION ENGINE (SIZE FIXED & STABLE)
+-- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FINAL FULL VERSION)
 -- =============================================================================
 local ScrollingFrame   = LMG2L["ScrollingFrame_2a"] 
 local ScriptBox        = LMG2L["ScriptBox_2c"]      
@@ -1475,22 +1475,19 @@ ScriptBox.TextColor3       = Color3.fromRGB(150, 150, 150)
 ScrollingFrame.Active           = true
 ScrollingFrame.ScrollingEnabled = true
 
--- 2. LOGIKA RESIZING YANG STABIL
+-- 2. LOGIKA RESIZING (DIPERBAIKI AGAR STABIL)
 local function updateCanvas()
-    -- Ambil tinggi teks
     local textHeight = ScriptBox.TextBounds.Y
-    local minSize = 150
-    local newHeight = math.max(textHeight + 40, minSize)
+    -- Margin 40 agar teks tidak terlalu mepet
+    local newHeight = math.max(textHeight + 40, 150)
     
-    -- Update size ScriptBox agar mengikuti panjang teks
+    -- ScriptBox membesar mengikuti isi
     ScriptBox.Size = UDim2.new(1, 0, 0, newHeight)
-    
-    -- Update CanvasSize agar ScrollingFrame tahu ada area baru untuk di-scroll
-    -- Kita beri sedikit margin agar tidak terlalu mepet
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, newHeight + 20)
+    -- CanvasSize mengikuti ScriptBox
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, newHeight)
 end
 
--- 3. EVENT HANDLING
+-- 3. EVENT HANDLING (FOCUS & INPUT)
 ScriptBox.Focused:Connect(function()
     if ScriptBox.Text == DEFAULT_PLACEHOLDER then
         ScriptBox.Text = ""
@@ -1498,7 +1495,6 @@ ScriptBox.Focused:Connect(function()
     end
 end)
 
--- Gunakan koneksi langsung agar responsif
 ScriptBox:GetPropertyChangedSignal("TextBounds"):Connect(updateCanvas)
 
 ScriptBox.FocusLost:Connect(function()
@@ -1510,8 +1506,8 @@ ScriptBox.FocusLost:Connect(function()
     end
 end)
 
-UIS.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
     if ScriptBox:IsFocused() and input.KeyCode == Enum.KeyCode.Tab then
         ScriptBox.Text = ScriptBox.Text .. "    "
         task.defer(function() ScriptBox:CaptureFocus() end)
@@ -1541,7 +1537,7 @@ ExecuteButton.MouseButton1Click:Connect(function()
     end)
 end)
 
--- 5. CLEAR & COPY
+-- 5. CLEAR & COPY (CLEAN)
 ClearButton.MouseButton1Click:Connect(function()
     ScriptBox.Text = DEFAULT_PLACEHOLDER
     ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
