@@ -1149,9 +1149,8 @@ LMG2L["UICorner_86"] = Instance.new("UICorner", LMG2L["ADDButton_85"]);
 LMG2L["UIGradient_87"] = Instance.new("UIGradient", LMG2L["ADDButton_85"]);
 LMG2L["UIGradient_87"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(107, 107, 107)),ColorSequenceKeypoint.new(0.524, Color3.fromRGB(243, 243, 243)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(95, 95, 95))};
 
-
 -- =============================================================================
--- NARAKU BLOX CORE ENGINE (100% PERFECT SYNCHRONIZED ARCHITECTURE - FIXED TOTAL)
+-- NARAKU BLOX CORE ENGINE (100% PERFECT SYNCHRONIZED ARCHITECTURE - FIXED)
 -- =============================================================================
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -1164,25 +1163,25 @@ if not LMG2L or type(LMG2L) ~= "table" then
     return
 end
 
--- 2. Inisialisasi Referensi Objek MURNI SAKLEK SAMA DENGAN FILE New struktur.lua.txt
+-- 2. Inisialisasi Referensi Objek MURNI SAKLEK 100% SAMA DENGAN FILE New struktur.lua.txt
 local ScreenGui     = LMG2L["ScreenGui_1"]       -- ScreenGui Utama
 local OpenButton    = LMG2L["OpenButton_2"]      -- Tombol Buka Panel
 local PanelUtama    = LMG2L["PanelUtama_6"]      -- Sidebar Induk Tombol Navigasi
 local CloseButton   = LMG2L["CloseButton_7f"]    -- Tombol Tutup Panel
 
--- Tombol Navigasi Utama (Murni dari File New struktur.lua.txt)
+-- Tombol Navigasi Utama (Murni Sesuai File New struktur.lua.txt)
 local MenuButton    = LMG2L["MenuButton_60"]     -- Tombol Menu (Index 60)
 local MainButton    = LMG2L["MainButton_82"]     -- Tombol Main (Index 82)
 local InfoButton    = LMG2L["InfoButton_85"]     -- Tombol Info (Index 85)
 local UploadButton  = LMG2L["UploadButton_5e"]    -- Tombol Upload (Index 5e)
 
--- Sub-Panel Konten Tengah (Murni dari File New struktur.lua.txt - Berdiri Sejajar)
+-- Sub-Panel Konten Tengah (Murni Berdiri Sejajar Sesuai File New struktur.lua.txt)
 local PanelMenu     = LMG2L["PanelConsole_4c"]   -- Panel Console/Menu milik MenuButton (Index 4c)
 local PanelMain     = LMG2L["PanelMain_65"]      -- Panel Main milik MainButton (Index 65)
 local PanelInfo     = LMG2L["PanelInfo_19"]      -- Panel Info milik InfoButton (Index 19)
 local PanelUpload   = LMG2L["PanelUpload_76"]     -- Panel Upload milik UploadButton (Index 76)
 
--- Variable Tracker untuk mengunci tombol yang sedang aktif terpilih saat ini
+-- Tracker tombol aktif saat ini untuk keperluan penahanan animasi highlight terpilih
 local tombolAktifSekarang = nil
 
 -- =============================================================================
@@ -1207,25 +1206,25 @@ if InfoButton then originalColors[InfoButton] = {Color = InfoButton.BackgroundCo
 if UploadButton then originalColors[UploadButton] = {Color = UploadButton.BackgroundColor3, Trans = UploadButton.BackgroundTransparency} end
 
 -- =============================================================================
--- 4. FUNGSI UTAMA MANAGEMENT TAB (MUTEX ARCHITECTURE - ANTI-NUMPUK)
+-- 4. FUNGSI UTAMA MANAGEMENT TAB (MUTEX SWITCH ARCHITECTURE)
 -- =============================================================================
 local function gantiTabPanel(tombolTarget, panelTarget)
     local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     
-    -- Kembalikan semua button navigasi yang sedang tidak aktif ke warna dasarnya
+    -- Pulihkan warna tombol lain yang tidak terpilih ke kondisi dasar aslinya
     for tombol, dataAwal in pairs(originalColors) do
         if tombol and tombol ~= tombolTarget then
             TweenService:Create(tombol, tweenInfo, {BackgroundColor3 = dataAwal.Color, BackgroundTransparency = dataAwal.Trans}):Play()
         end
     end
 
-    -- LOGIKAL SWITCH BERSIH: Matikan semua panel konten tengah, nyalakan yang dipilih
+    -- ALUR SAKLEK LU: Sembunyikan panel lama (atau yang tadinya true dipaksa false), nyalakan bagiannya!
     if PanelMain then PanelMain.Visible = (panelTarget == PanelMain) end
     if PanelMenu then PanelMenu.Visible = (panelTarget == PanelMenu) end
     if PanelInfo then PanelInfo.Visible = (panelTarget == PanelInfo) end
     if PanelUpload then PanelUpload.Visible = (panelTarget == PanelUpload) end
 
-    -- Kunci tombol aktif saat ini ke visual highlight putih transparan
+    -- Kunci tombol saat ini dalam kondisi visual highlight aktif
     if tombolTarget then
         tombolAktifSekarang = tombolTarget
         TweenService:Create(tombolTarget, tweenInfo, {BackgroundColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 0.4}):Play()
@@ -1233,35 +1232,35 @@ local function gantiTabPanel(tombolTarget, panelTarget)
 end
 
 -- =============================================================================
--- 5. FUNGSI LOGIC ANIMASI SENTUHAN (HOVER HANDLING ENGINE)
+-- 5. LOGIC ANIMASI SENTUHAN (HOVER HANDLING ENGINE)
 -- =============================================================================
 local function applyHoverEffect(tombol)
     if not tombol then return end
     local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     
     tombol.MouseEnter:Connect(function()
-        -- Hanya beri feedback cerah jika tombol ini sedang tidak terkunci aktif
+        -- Berikan highlight cerah halus hanya jika tombol sedang tidak dalam kondisi terkunci/aktif
         if tombolAktifSekarang ~= tombol then
             TweenService:Create(tombol, tweenInfo, {BackgroundTransparency = 0.6, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
         end
     end)
     
     tombol.MouseLeave:Connect(function()
-        -- Jika kursor keluar dan tombol tidak aktif, pulihkan total ke warna default aslinya
+        -- Kembalikan murni ke warna default aslinya saat kursor menjauh (kecuali jika tombol sedang aktif)
         if tombolAktifSekarang ~= tombol and originalColors[tombol] then
             TweenService:Create(tombol, tweenInfo, {BackgroundColor3 = originalColors[tombol].Color, BackgroundTransparency = originalColors[tombol].Trans}):Play()
         end
     end)
 end
 
--- Pasang sensor sentuh kursor ke seluruh tombol navigasi murni index terbaru lu
+-- Pasang sensor efek sentuh kursor ke seluruh tombol navigasi samping secara aman
 applyHoverEffect(MainButton)
 applyHoverEffect(MenuButton)
 applyHoverEffect(InfoButton)
 applyHoverEffect(UploadButton)
 
 -- =============================================================================
--- EVENT LISTENERS: KLIK TOMBOL NAVIGASI (MUNCULIN PANELNYA MASING-MASING)
+-- EVENT LISTENERS: EVENT KLIK PERPINDAHAN PANEL UTAMA
 -- =============================================================================
 
 if MainButton then
@@ -1293,18 +1292,18 @@ if UploadButton then
 end
 
 -- =============================================================================
--- SYSTEM PROTEKSI ANTI-HILANG & RE-CONNECT SAFETY (STUDIO PLAY STOP HANDLING)
+-- SYSTEM PROTEKSI ANTI-HILANG DARI STUDIO (PLAY/STOP & RE-PARENT SAFE)
 -- =============================================================================
 local function maintainGuiSecurity()
     if ScreenGui and ScreenGui:IsA("ScreenGui") then
         ScreenGui.ResetOnSpawn = false
         
-        -- Coba kaitkan ke CoreGui agar aman dari reset runtime Studio Play/Stop
+        -- Bungkus pcall aman agar tidak merusak simulasi runtime local PlayerGui/CoreGui
         pcall(function()
             ScreenGui.Parent = CoreGui
         end)
         
-        -- Fallback & Restorasi jika terdeteksi berubah parent akibat simulasi Studio
+        -- Deteksi real-time perubahan parent akibat siklus play-stop roblox studio
         ScreenGui:GetPropertyChangedSignal("Parent"):Connect(function()
             if ScreenGui.Parent ~= CoreGui and ScreenGui.Parent ~= nil then
                 pcall(function()
@@ -1317,7 +1316,7 @@ end
 maintainGuiSecurity()
 
 -- =============================================================================
--- KONDISI AWAL SAAT DI-EXECUTE (FIRST INJECT INITIALIZATION)
+-- KONDISI AWAL SAAT DI-EXECUTE (FIRST INJECT CLEANER INITIAL STATE)
 -- =============================================================================
 if PanelUtama then
     PanelUtama.Visible = true
@@ -1329,13 +1328,13 @@ if OpenButton then
     OpenButton.Size = UDim2.new(0, 35, 0, 35)
 end
 
--- Matikan semua sub-panel konten tengah terlebih dahulu sebelum inisialisasi awal
+-- Paksa bersihkan/matikan seluruh sub-panel bawaan studio di awal agar kanvas bersih
 if PanelMain then PanelMain.Visible = false end
 if PanelMenu then PanelMenu.Visible = false end
 if PanelInfo then PanelInfo.Visible = false end
 if PanelUpload then PanelUpload.Visible = false end
 
--- EKSEKUSI UTAMA RENCANA LU: Langsung Menampilkan PanelMain & Menyalakan MainButton!
+-- EKSEKUSI RENCANA SAKLEK UTAMA: MainButton terpilih utama & PanelMain langsung aktif!
 if MainButton and PanelMain then
     gantiTabPanel(MainButton, PanelMain)
 end
@@ -1389,7 +1388,7 @@ if OpenButton and PanelUtama then
             openTween:Play()
             
             openTween.Completed:Connect(function()
-                -- Mengikuti rencana: saat panel dibuka kembali, kembalikan fokus ke default PanelMain secara sinkron
+                -- Saat dipanggil ulang via OpenButton, kembalikan kondisi awal terpilih ke PanelMain
                 gantiTabPanel(MainButton, PanelMain)
             end)
         end)
@@ -1472,7 +1471,7 @@ task.spawn(function()
     end
 end)
 
-print("NARAKU BLOX MAIN ENGINE SINKRON STRUKTUR BARU & ANTI-HAPUS 100% FIXED SUCCESS!")
+print("NARAKU BLOX CORE ENGINE 100% FIXED SINKRON STRUKTUR & PLAN LU SUCCESS!")
 -- =============================================================================
 
 return LMG2L["ScreenGui_1"], require;
