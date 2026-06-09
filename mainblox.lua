@@ -1460,7 +1460,6 @@ local ExecuteButton    = LMG2L["ExecuteButton_1a"]
 local ClearButton      = LMG2L["ClearButton_23"]    
 local SalinButton      = LMG2L["SalinClipBoardButton_26"] 
 
-local UIS = game:GetService("UserInputService")
 local DEFAULT_PLACEHOLDER = "print('Hello World')"
 
 -- 1. SETUP INITIAL
@@ -1471,9 +1470,8 @@ ScriptBox.TextWrapped      = true
 ScriptBox.Text             = DEFAULT_PLACEHOLDER
 ScriptBox.TextColor3       = Color3.fromRGB(150, 150, 150)
 
--- 2. LOGIKA RESIZING (SINKRONISASI BOX DAN CANVAS)
+-- 2. LOGIKA RESIZING (LOGIKA OKE)
 local function updateCanvas()
-    -- Menggunakan logika yang sudah terbukti oke
     local dynamicHeight = math.max(202, ScriptBox.TextBounds.Y + 25)
     
     ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, dynamicHeight)
