@@ -1452,7 +1452,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FINAL FULL VERSION)
+-- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FINAL FIXED)
 -- =============================================================================
 local ScrollingFrame   = LMG2L["ScrollingFrame_2a"] 
 local ScriptBox        = LMG2L["ScriptBox_2c"]      
@@ -1463,28 +1463,25 @@ local SalinButton      = LMG2L["SalinClipBoardButton_26"]
 local UIS = game:GetService("UserInputService")
 local DEFAULT_PLACEHOLDER = "print('Hello World')"
 
--- 1. SETUP INITIAL
+-- 1. SETUP INITIAL (GUNAKAN AUTOMATICSIZE)
 ScriptBox.ClearTextOnFocus = false
 ScriptBox.MultiLine        = true
 ScriptBox.TextXAlignment   = Enum.TextXAlignment.Left
 ScriptBox.TextYAlignment   = Enum.TextYAlignment.Top
 ScriptBox.ClipsDescendants = false
+ScriptBox.AutomaticSize    = Enum.AutomaticSize.Y -- KUNCI AGAR TIDAK TERPOTONG
 ScriptBox.Text             = DEFAULT_PLACEHOLDER
 ScriptBox.TextColor3       = Color3.fromRGB(150, 150, 150)
 
 ScrollingFrame.Active           = true
 ScrollingFrame.ScrollingEnabled = true
+ScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y -- KUNCI AGAR SCROLLING SESUAI
 
--- 2. LOGIKA RESIZING (DIPERBAIKI AGAR STABIL)
+-- 2. LOGIKA RESIZING (CUKUP UPDATE CANVAS SAJA)
 local function updateCanvas()
-    local textHeight = ScriptBox.TextBounds.Y
-    -- Margin 40 agar teks tidak terlalu mepet
-    local newHeight = math.max(textHeight + 40, 150)
-    
-    -- ScriptBox membesar mengikuti isi
-    ScriptBox.Size = UDim2.new(1, 0, 0, newHeight)
-    -- CanvasSize mengikuti ScriptBox
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, newHeight)
+    -- Tidak perlu lagi memaksa ScriptBox.Size secara manual
+    -- Karena AutomaticSize Y sudah menangani itu agar tidak terpotong
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0) 
 end
 
 -- 3. EVENT HANDLING (FOCUS & INPUT)
@@ -1495,14 +1492,11 @@ ScriptBox.Focused:Connect(function()
     end
 end)
 
-ScriptBox:GetPropertyChangedSignal("TextBounds"):Connect(updateCanvas)
-
 ScriptBox.FocusLost:Connect(function()
     local clean = ScriptBox.Text:gsub("%s+", "")
     if clean == "" then
         ScriptBox.Text = DEFAULT_PLACEHOLDER
         ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-        updateCanvas()
     end
 end)
 
@@ -1537,11 +1531,10 @@ ExecuteButton.MouseButton1Click:Connect(function()
     end)
 end)
 
--- 5. CLEAR & COPY (CLEAN)
+-- 5. CLEAR & COPY
 ClearButton.MouseButton1Click:Connect(function()
     ScriptBox.Text = DEFAULT_PLACEHOLDER
     ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-    updateCanvas()
 end)
 
 SalinButton.MouseButton1Click:Connect(function()
@@ -1549,8 +1542,5 @@ SalinButton.MouseButton1Click:Connect(function()
         setclipboard(ScriptBox.Text)
     end
 end)
-
--- INIT
-updateCanvas()
 
 return LMG2L["ScreenGui_1"], require;
