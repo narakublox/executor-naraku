@@ -1452,7 +1452,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- SYSTEM PANEL MENU - CODE EDITOR & EXECUTION SYSTEM (100% COMPLETE & STABLE)
+-- SYSTEM PANEL MENU - CODE EDITOR & EXECUTION SYSTEM (100% PERFECT & FULL)
 -- =============================================================================
 -- 1. Inisialisasi Referensi Komponen Sesuai Berkas Dokumentasi Asli Kamu
 local PanelMenu        = LMG2L["PanelMenu_19"]
@@ -1476,57 +1476,51 @@ local DEFAULT_PLACEHOLDER = "print('Hello World')"
 ScriptBox.Text = DEFAULT_PLACEHOLDER
 ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150) -- Efek warna abu-abu samar
 
--- Mengizinkan input scroll tembus ke ScrollingFrame induk saat tidak dalam mode edit
-ScrollingFrame.Active = true
-ScriptBox.Active = false 
-
 -- =============================================================================
--- LOGIKA PEMULIHAN TEKS, INDENTASI TAB, DAN DYNAMIC UIListLayout RESIZER
+-- LOGIKA PEMULIHAN TEKS, INDENTASI TAB, DAN SINKRONISASI UIListLayout
 -- =============================================================================
 
--- Ketika ScriptBox diklik/difokuskan untuk mulai mengetik script
+-- Ketika ScriptBox diklik/difokuskan untuk mulai mengetik script (TIDAK ADA SOUND SEUAI REQ)
 ScriptBox.Focused:Connect(function()
-    ScriptBox.Active = true -- Aktifkan deteksi penuh saat mengetik agar text kursor berjalan lancar
     if ScriptBox.Text == DEFAULT_PLACEHOLDER then
         ScriptBox.Text = ""
         ScriptBox.TextColor3 = Color3.fromRGB(255, 255, 255) -- Kembali ke warna teks utama kamu
     end
 end)
 
--- Memantau perubahan teks secara dinamis (Menangani hapus manual & auto-resize canvas)
+-- Memantau perubahan teks secara dinamis (Menangani hapus manual & penyesuaian tinggi UIListLayout)
 ScriptBox:GetPropertyChangedSignal("Text"):Connect(function()
-    -- Fitur Pemulihan Instan: Jika teks kosong total saat user menghapus manual lewat backspace
+    -- Fitur Pemulihan Instan: Jika teks kosong total (tidak ada karakter sama sekali)
+    -- dan user sedang tidak memfokuskan TextBox (tidak sedang mengetik), pulihkan teks bawaan
     if ScriptBox.Text == "" and not ScriptBox:IsFocused() then
         ScriptBox.Text = DEFAULT_PLACEHOLDER
         ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
     end
 
-    -- Mengatur tinggi ScriptBox & Canvas secara dinamis agar UIListLayout ikut bergeser turun rapi
+    -- Dinamis mengikuti tinggi text asli agar text box ditarik memanjang ke bawah oleh UIListLayout
     if ScriptBox.Text ~= DEFAULT_PLACEHOLDER and ScriptBox.Text ~= "" then
         local textHeight = ScriptBox.TextBounds.Y
-        -- Paksa ukuran ScriptBox mengikuti tinggi text asli agar tidak terpotong oleh UIListLayout
-        ScriptBox.Size = UDim2.new(ScriptBox.Size.X.Scale, ScriptBox.Size.X.Offset, 0, textHeight + 20)
+        ScriptBox.Size = UDim2.new(ScriptBox.Size.X.Scale, ScriptBox.Size.X.Offset, 0, textHeight + 30)
     else
-        ScriptBox.Size = UDim2.new(ScriptBox.Size.X.Scale, ScriptBox.Size.X.Offset, 0, 30) -- Ukuran minimal awal
+        ScriptBox.Size = UDim2.new(ScriptBox.Size.X.Scale, ScriptBox.Size.X.Offset, 0, 35) -- Tinggi awal pas placeholder
     end
 end)
 
--- Sinkronisasi Tinggi Canvas ScrollingFrame dengan Output Hasil UIListLayout secara Real-Time
+-- Menghubungkan pertumbuhan ukuran isi UIListLayout ke area scroll Canvas secara otomatis
 if UIListLayout then
     UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        local contentHeight = UIListLayout.AbsoluteContentSize.Y
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 40)
+        local currentContentHeight = UIListLayout.AbsoluteContentSize.Y
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, currentContentHeight + 40)
     end)
 end
 
 -- Ketika user selesai berinteraksi atau mengklik luar area ScriptBox
 ScriptBox.FocusLost:Connect(function(enterPressed)
-    ScriptBox.Active = false -- Matikan fokus agar area TextBox bisa di-scroll kembali dengan usapan jari/mouse
     -- Jika teks kosong atau hanya berisi spasi/tab kosong setelah diketik, pulihkan tulisan awal
     if string.gsub(ScriptBox.Text, "%s+", "") == "" then
         ScriptBox.Text = DEFAULT_PLACEHOLDER
         ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-        ScriptBox.Size = UDim2.new(ScriptBox.Size.X.Scale, ScriptBox.Size.X.Offset, 0, 30)
+        ScriptBox.Size = UDim2.new(ScriptBox.Size.X.Scale, ScriptBox.Size.X.Offset, 0, 35)
     end
 end)
 
@@ -1542,10 +1536,10 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 -- =============================================================================
--- SISTEM AKSI UTAMA TOMBOL (EXECUTE DENGAN REQUIRE BYPASS, CLEAR, DAN COPY)
+-- SISTEM AKSI UTAMA TOMBOL (EXECUTE DENGAN SANDBOX REQUIRE, CLEAR, DAN COPY)
 -- =============================================================================
 
--- 1. EXECUTE BUTTON: Menjalankan skrip (Mendukung loadstring & require ModuleScript via custom sandbox)
+-- 1. EXECUTE BUTTON: Menjalankan skrip yang dimasukkan (Mendukung Loadstring & Bypass Require)
 ExecuteButton.MouseButton1Click:Connect(function()
     if typeof(playClickSound) == "function" then playClickSound() end
     if typeof(applySlimeEffect) == "function" then applySlimeEffect(ExecuteButton) end
@@ -1553,22 +1547,21 @@ ExecuteButton.MouseButton1Click:Connect(function()
     local codeToExecute = ScriptBox.Text
     if codeToExecute == "" or codeToExecute == DEFAULT_PLACEHOLDER then return end
     
+    -- Eksekusi aman menggunakan loadstring yang dibungkus pcall dengan modifikasi environment kustom
     task.spawn(function()
-        -- Membuat Sandbox Environment untuk membypass pembatasan require() bawaan game Roblox
         local customEnv = setmetatable({}, {
             __index = function(_, key)
                 if key == "require" then
-                    -- Menggunakan fungsi require kustom bawaan global environment executor (jika ada) untuk bypass asset
-                    return getgenv and getgenv().require or require 
+                    -- Alihkan pemanggilan ke fungsi require milik executor jika tersedia (Bypass pembatasan game)
+                    return getgenv and getgenv().require or require
                 end
                 return getfenv()[key]
             end
         })
-        
-        -- Eksekusi aman menggunakan loadstring yang dibungkus pcall agar anti-crash
+
         local success, func = pcall(loadstring, codeToExecute)
         if success and func then
-            setfenv(func, customEnv) -- Terapkan environment bypass require ke dalam skrip
+            setfenv(func, customEnv) -- Masukkan custom environment pendukung bypass require ke fungsi
             
             local runSuccess, runError = pcall(func)
             if not runSuccess then
@@ -1587,7 +1580,7 @@ ClearButton.MouseButton1Click:Connect(function()
     
     ScriptBox.Text = DEFAULT_PLACEHOLDER
     ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-    ScriptBox.Size = UDim2.new(ScriptBox.Size.X.Scale, ScriptBox.Size.X.Offset, 0, 30)
+    ScriptBox.Size = UDim2.new(ScriptBox.Size.X.Scale, ScriptBox.Size.X.Offset, 0, 35)
     ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 end)
 
