@@ -1452,16 +1452,17 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- SYSTEM PANEL MENU - CODE EDITOR & EXECUTION SYSTEM (FINAL INTEGRATION)
+-- SYSTEM PANEL MENU - CODE EDITOR & EXECUTION SYSTEM (FIXED 100%)
 -- =============================================================================
 local PanelMenu        = LMG2L["PanelMenu_19"]
-local ScrollingFrame   = LMG2L["ScrollingFrame_2a"]
-local ScriptBox        = LMG2L["ScriptBox_2c"]
+local ScrollingFrame   = LMG2L["ScrollingFrame_2a"] 
+local ScriptBox        = LMG2L["ScriptBox_2c"]      
 
 local ExecuteButton    = LMG2L["ExecuteButton_1a"]  
 local ClearButton      = LMG2L["ClearButton_23"]    
 local SalinButton      = LMG2L["SalinClipBoardButton_26"] 
 
+-- Konfigurasi
 ScriptBox.ClearTextOnFocus = false
 ScriptBox.MultiLine        = true
 ScriptBox.TextXAlignment   = Enum.TextXAlignment.Left
@@ -1471,11 +1472,12 @@ local DEFAULT_PLACEHOLDER = "print('Hello World')"
 ScriptBox.Text = DEFAULT_PLACEHOLDER
 ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
 
--- PENAMBAHAN: Pastikan ScrollingFrame aktif agar bisa scroll saat tidak mengetik
+-- Memastikan ScrollingFrame aktif selamanya
 ScrollingFrame.Active = true
+ScrollingFrame.ScrollingEnabled = true
 
 -- =============================================================================
--- LOGIKA PEMULIHAN TEKS, INDENTASI TAB, DAN AUTO-RESIZE CANVAS
+-- LOGIKA PEMULIHAN TEKS, INDENTASI TAB, DAN AUTO-RESIZE CANVAS (FIXED)
 -- =============================================================================
 
 ScriptBox.Focused:Connect(function()
@@ -1491,11 +1493,12 @@ ScriptBox:GetPropertyChangedSignal("Text"):Connect(function()
         ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
     end
 
+    -- FIX: Jangan pernah buat CanvasSize 0, minimal 100 agar scroll selalu bisa diakses
     if ScriptBox.Text ~= DEFAULT_PLACEHOLDER and ScriptBox.Text ~= "" then
         local textHeight = ScriptBox.TextBounds.Y
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, textHeight + 50)
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(textHeight + 50, 100))
     else
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 100)
     end
 end)
 
@@ -1503,6 +1506,7 @@ ScriptBox.FocusLost:Connect(function(enterPressed)
     if string.gsub(ScriptBox.Text, "%s+", "") == "" then
         ScriptBox.Text = DEFAULT_PLACEHOLDER
         ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 100)
     end
 end)
 
@@ -1517,17 +1521,14 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 -- =============================================================================
--- SISTEM AKSI UTAMA (EXECUTE DENGAN BYPASS, CLEAR, DAN COPY)
+-- SISTEM AKSI UTAMA (EXECUTE, CLEAR, DAN COPY - NO SOUND, BYPASS READY)
 -- =============================================================================
 
 ExecuteButton.MouseButton1Click:Connect(function()
-    if typeof(playClickSound) == "function" then playClickSound() end
-    if typeof(applySlimeEffect) == "function" then applySlimeEffect(ExecuteButton) end
-    
     local codeToExecute = ScriptBox.Text
     if codeToExecute == "" or codeToExecute == DEFAULT_PLACEHOLDER then return end
     
-    -- INTEGRASI BYPASS: Menyiapkan environment yang mendukung require()
+    -- INTEGRASI BYPASS: Memaksa env executor ke dalam fungsi
     task.spawn(function()
         local env = getgenv and getgenv() or getfenv()
         local bypassEnv = setmetatable({
@@ -1537,7 +1538,7 @@ ExecuteButton.MouseButton1Click:Connect(function()
         
         local success, func = pcall(loadstring, codeToExecute)
         if success and func then
-            setfenv(func, bypassEnv) -- Menerapkan environment bypass
+            setfenv(func, bypassEnv)
             local runSuccess, runError = pcall(func)
             if not runSuccess then
                 warn("[Naraku Error]: " .. tostring(runError))
@@ -1549,24 +1550,21 @@ ExecuteButton.MouseButton1Click:Connect(function()
 end)
 
 ClearButton.MouseButton1Click:Connect(function()
-    if typeof(playClickSound) == "function" then playClickSound() end
-    if typeof(applySlimeEffect) == "function" then applySlimeEffect(ClearButton) end
     ScriptBox.Text = DEFAULT_PLACEHOLDER
     ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 100)
 end)
 
 SalinButton.MouseButton1Click:Connect(function()
-    if typeof(playClickSound) == "function" then playClickSound() end
-    if typeof(applySlimeEffect) == "function" then applySlimeEffect(SalinButton) end
     local codeToCopy = ScriptBox.Text
     if codeToCopy == "" or codeToCopy == DEFAULT_PLACEHOLDER then return end
+    
     if setclipboard then
         setclipboard(codeToCopy)
     elseif toclipboard then
         toclipboard(codeToCopy)
     else
-        warn("[Naraku Warning]: Clipboard tidak didukung.")
+        warn("[Naraku Warning]: Executor tidak mendukung Clipboard.")
     end
 end)
 
