@@ -1149,6 +1149,232 @@ LMG2L["UICorner_86"] = Instance.new("UICorner", LMG2L["ADDButton_85"]);
 LMG2L["UIGradient_87"] = Instance.new("UIGradient", LMG2L["ADDButton_85"]);
 LMG2L["UIGradient_87"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(107, 107, 107)),ColorSequenceKeypoint.new(0.524, Color3.fromRGB(243, 243, 243)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(95, 95, 95))};
 
+-- =============================================================================
+-- 1. INITIALIZATION & PROTEKSI ANTI-HILANG (CORE_GUI ACTIVE)
+-- =============================================================================
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+local CoreGui = game:GetService("CoreGui")
 
+local ScreenGui    = LMG2L["ScreenGui_1"]       -- ScreenGui Utama
+local OpenButton   = LMG2L["OpenButton_2"]      -- Tombol Buka Panel (Disesuaikan)
+local PanelUtama   = LMG2L["PanelUtama_6"]      -- Sidebar/Panel Utama
+
+-- Jalankan Proteksi Anti-Hilang Persis Contohmu
+if ScreenGui and ScreenGui:IsA("ScreenGui") then
+    ScreenGui.ResetOnSpawn = false 
+    pcall(function()
+        ScreenGui.Parent = CoreGui
+    end)
+end
+
+-- =============================================================================
+-- 2. INBOUND REFERENCES (STRUKTUR TOMBOL & PANEL ASLI KAMU)
+-- =============================================================================
+-- Seluruh Tombol yang ada di dalam PanelUtama (Sesuai File Struktur)
+local MenuButton   = LMG2L["MenuButton_a"]      
+local MainButton   = LMG2L["MainButton_f"]      
+local InfoButton   = LMG2L["InfoButton_7"]      
+local UploadButton = LMG2L["UploadButton_16"]    
+local CloseButton  = LMG2L["CloseButton_12"]    -- Ditambahkan agar tombol Close terbaca
+
+-- 4 Panel Konten Utama Sesuai Struktur Berkasmu
+local PanelMain    = LMG2L["PanelMain_2d"]      
+local PanelMenu    = LMG2L["PanelMenu_19"]      
+local PanelInfo    = LMG2L["PanelInfo_43"]      
+local PanelUpload  = LMG2L["PanelUpload_76"]    
+
+-- Kondisi Awal Visibilitas Sesuai Aturan Main Engine
+PanelUtama.Visible = true
+PanelUtama.BackgroundTransparency = 0.2
+OpenButton.Visible = false 
+OpenButton.Size = UDim2.new(0, 35, 0, 35)
+
+-- =============================================================================
+-- 3. INSTANT AUDIO & FLASH EFFECT GENERATOR
+-- =============================================================================
+local function playClickSound()
+    task.spawn(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://6026984224"
+        sound.Volume = 0.5
+        sound.PlayOnRemove = true
+        sound.Parent = SoundService
+        sound:Destroy()
+    end)
+end
+
+local function applyFlashEffect(button)
+    if not button then return end
+    local oldColor = button.BackgroundColor3
+    local oldTrans = button.BackgroundTransparency
+    
+    button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundTransparency = 0.4
+    
+    TweenService:Create(button, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundColor3 = oldColor,
+        BackgroundTransparency = oldTrans
+    }):Play()
+end
+
+-- =============================================================================
+-- 4. LOGIKA NAVIGASI KONTEN PANEL (TAB STATE MANAGEMENT)
+-- =============================================================================
+local buttonStates = {
+    [MainButton]   = { color = MainButton.BackgroundColor3,   trans = MainButton.BackgroundTransparency },
+    [MenuButton]   = { color = MenuButton.BackgroundColor3,   trans = MenuButton.BackgroundTransparency },
+    [InfoButton]   = { color = InfoButton.BackgroundColor3,   trans = InfoButton.BackgroundTransparency },
+    [UploadButton] = { color = UploadButton.BackgroundColor3, trans = UploadButton.BackgroundTransparency }
+}
+
+local panelMapping = {
+    [MainButton]   = PanelMain,
+    [MenuButton]   = PanelMenu,
+    [InfoButton]   = PanelInfo,
+    [UploadButton] = PanelUpload
+}
+
+local POS_PANEL_SHOW = UDim2.new(1, -415, 0, 10)  -- Posisi muncul asli dari struktur
+local POS_PANEL_HIDE = UDim2.new(1, 100, 0, 10)   -- Posisi sembunyi di luar layar kanan
+local currentActivePanel = nil
+
+local function updateTabVisual(activeButton)
+    local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    for btn, original in pairs(buttonStates) do
+        if btn == activeButton then
+            -- Highlight tombol aktif menjadi putih transparan menetap
+            TweenService:Create(btn, tweenInfo, {
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                BackgroundTransparency = 0.5
+            }):Play()
+        else
+            -- Kembalikan tombol tidak aktif ke warna asli bawaannya
+            TweenService:Create(btn, tweenInfo, {
+                BackgroundColor3 = original.color,
+                BackgroundTransparency = original.trans
+            }):Play()
+        end
+    end
+end
+
+local function transitionPanel(panel, shouldShow)
+    if not panel then return end
+    if shouldShow then
+        panel.Visible = true
+        TweenService:Create(panel, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = POS_PANEL_SHOW,
+            BackgroundTransparency = 0.2
+        }):Play()
+    else
+        local fadeTween = TweenService:Create(panel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = POS_PANEL_HIDE,
+            BackgroundTransparency = 1
+        })
+        fadeTween:Play()
+        fadeTween.Completed:Connect(function()
+            if panel.Position == POS_PANEL_HIDE then
+                panel.Visible = false
+            end
+        end)
+    end
+end
+
+local function onNavigationClicked(clickedButton)
+    local targetPanel = panelMapping[clickedButton]
+    if not targetPanel then return end
+
+    playClickSound()
+    applyFlashEffect(clickedButton)
+
+    -- Jika panel yang sama diklik ulang, lakukan penutupan panel tersebut
+    if currentActivePanel == targetPanel then
+        transitionPanel(targetPanel, false)
+        updateTabVisual(nil) 
+        currentActivePanel = nil
+        return
+    end
+
+    -- Sembunyikan panel aktif sebelumnya jika ada penukaran tab kontent
+    if currentActivePanel then
+        transitionPanel(currentActivePanel, false)
+    end
+
+    -- Tampilkan panel baru yang dipilih
+    transitionPanel(targetPanel, true)
+    updateTabVisual(clickedButton)
+    currentActivePanel = targetPanel
+end
+
+-- Menyambungkan fungsi klik ke tombol navigasi internal sidebar
+for button, _ in pairs(panelMapping) do
+    if button then
+        button.MouseButton1Click:Connect(function()
+            onNavigationClicked(button)
+        end)
+    end
+end
+
+-- =============================================================================
+-- 5. LOGIKA INTERAKSI CLOSE & OPEN BUTTON (FADE & POP UP PERSIS ENGINE CONTOH)
+-- =============================================================================
+CloseButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    applyFlashEffect(CloseButton)
+    
+    -- Sembunyikan sub-panel aktif terlebih dahulu jika ada yang terbuka sebelum sidebar ditutup
+    if currentActivePanel then
+        transitionPanel(currentActivePanel, false)
+        updateTabVisual(nil)
+        currentActivePanel = nil
+    end
+    
+    -- Fade Out PanelUtama
+    local fadeMain = TweenService:Create(PanelUtama, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 1
+    })
+    fadeMain:Play()
+    
+    fadeMain.Completed:Connect(function()
+        PanelUtama.Visible = false
+        
+        -- Efek Pop Up Membesarkan OpenButton dari ukuran 0 ke 35
+        OpenButton.Visible = true
+        OpenButton.Size = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(OpenButton, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 35, 0, 35)
+        }):Play()
+    end)
+end)
+
+OpenButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    
+    -- Animasi menyusutkan OpenButton hingga menghilang
+    local shrinkOpen = TweenService:Create(OpenButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0)
+    })
+    shrinkOpen:Play()
+    
+    shrinkOpen.Completed:Connect(function()
+        OpenButton.Visible = false
+        OpenButton.Size = UDim2.new(0, 35, 0, 35) -- Reset size untuk trigger berikutnya
+        
+        -- Memunculkan kembali PanelUtama menggunakan efek Fade In
+        PanelUtama.BackgroundTransparency = 1
+        PanelUtama.Visible = true
+        TweenService:Create(PanelUtama, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0.2
+        }):Play()
+    end)
+end)
+
+-- Sembunyikan semua sub-panel konten di awal eksekusi program agar rapi
+for _, panel in pairs(panelMapping) do
+    if panel then
+        panel.Visible = false
+        panel.Position = POS_PANEL_HIDE
+    end
+end
 
 return LMG2L["ScreenGui_1"], require;
