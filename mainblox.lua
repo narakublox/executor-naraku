@@ -1452,7 +1452,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FIXED SIZE VERSION)
+-- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (ULTIMATE STABLE)
 -- =============================================================================
 local ScrollingFrame   = LMG2L["ScrollingFrame_2a"] 
 local ScriptBox        = LMG2L["ScriptBox_2c"]      
@@ -1463,35 +1463,33 @@ local SalinButton      = LMG2L["SalinClipBoardButton_26"]
 local UIS = game:GetService("UserInputService")
 local DEFAULT_PLACEHOLDER = "print('Hello World')"
 
--- 1. SETUP INITIAL
+-- 1. SETUP INITIAL (DITAMBAH AUTOMATIC SIZE UNTUK STABILITAS)
 ScriptBox.ClearTextOnFocus = false
 ScriptBox.MultiLine        = true
 ScriptBox.TextXAlignment   = Enum.TextXAlignment.Left
 ScriptBox.TextYAlignment   = Enum.TextYAlignment.Top
 ScriptBox.ClipsDescendants = false
+-- GANTI: Gunakan AutomaticSize agar ScriptBox membesar otomatis tanpa dipaksa script
+ScriptBox.AutomaticSize    = Enum.AutomaticSize.Y 
+ScriptBox.Size             = UDim2.new(1, 0, 0, 0) -- Biarkan AutomaticSize yang handle
 ScriptBox.Text             = DEFAULT_PLACEHOLDER
 ScriptBox.TextColor3       = Color3.fromRGB(150, 150, 150)
 
 ScrollingFrame.Active           = true
 ScrollingFrame.ScrollingEnabled = true
 
--- 2. LOGIKA RESIZING (HANYA CANVAS YANG BERUBAH, SCRIPTBOX TETAP)
+-- 2. LOGIKA RESIZING YANG JAUH LEBIH STABIL
 local function updateCanvas()
+    -- Tunggu sebentar agar TextBounds terupdate sebelum menghitung
+    task.wait() 
     local textHeight = ScriptBox.TextBounds.Y
-    -- Ukuran fisik ScriptBox dibiarkan apa adanya (Fixed Size)
-    -- Kita hanya menyesuaikan seberapa jauh user bisa scroll (CanvasSize)
-    local minSize = ScrollingFrame.AbsoluteSize.Y -- Mengikuti tinggi frame utama
-    local newHeight = math.max(textHeight + 20, minSize)
+    local minSize = ScrollingFrame.AbsoluteSize.Y
     
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, newHeight)
-    
-    -- Auto-scroll ke bawah saat mengetik agar cursor terlihat
-    if ScriptBox:IsFocused() then
-        ScrollingFrame.CanvasPosition = Vector2.new(0, math.max(0, newHeight - ScrollingFrame.AbsoluteWindowSize.Y))
-    end
+    -- CanvasSize mengikuti tinggi ScriptBox, bukan memaksanya
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(textHeight + 40, minSize))
 end
 
--- 3. EVENT HANDLING (FOCUS & INPUT)
+-- 3. EVENT HANDLING (DENGAN DEBOUNCE AGAR TIDAK FLICKER)
 ScriptBox.Focused:Connect(function()
     if ScriptBox.Text == DEFAULT_PLACEHOLDER then
         ScriptBox.Text = ""
@@ -1499,7 +1497,7 @@ ScriptBox.Focused:Connect(function()
     end
 end)
 
--- Gunakan GetPropertyChangedSignal pada TextBounds untuk update canvas
+-- Gunakan event ini untuk update canvas dengan halus
 ScriptBox:GetPropertyChangedSignal("TextBounds"):Connect(updateCanvas)
 
 ScriptBox.FocusLost:Connect(function()
@@ -1541,7 +1539,7 @@ ExecuteButton.MouseButton1Click:Connect(function()
     end)
 end)
 
--- 5. CLEAR & COPY (CLEAN)
+-- 5. CLEAR & COPY
 ClearButton.MouseButton1Click:Connect(function()
     ScriptBox.Text = DEFAULT_PLACEHOLDER
     ScriptBox.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -1554,7 +1552,6 @@ SalinButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- INIT
 updateCanvas()
 
 return LMG2L["ScreenGui_1"], require;
