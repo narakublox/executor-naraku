@@ -1140,7 +1140,7 @@ LMG2L["IconInfo_86"]["Position"] = UDim2.new(0, 4, 0, 4);
 LMG2L["UICorner_87"] = Instance.new("UICorner", LMG2L["InfoButton_85"]);
 
 -- =============================================================================
--- ULTIMATE MAIN PANEL CORE ENGINE (100% PERFECT STATE - FIXED TOGGLE SYSTEM)
+-- ULTIMATE MAIN PANEL CORE ENGINE (FINAL VERSION - 100% PERFECT CLEAN FIXED)
 -- =============================================================================
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -1208,15 +1208,21 @@ local originalMenuTrans = MenuButton.BackgroundTransparency
 local originalInfoColor = InfoButton.BackgroundColor3
 local originalInfoTrans = InfoButton.BackgroundTransparency
 
--- 4. Pengaturan Kondisi Awal Visibilitas UI saat Dimuat (Semua Tertutup Kecuali Sidebar)
+-- 4. PEMBERSIHAN TOTAL FRAME PERTAMA (FORCE-RESET TO CLEAN STATE)
+-- Memaksa menyembunyikan semua sub-panel agar tidak saling tabrakan di awal eksekusi
+local function clearAllPanels()
+    if PanelMain then PanelMain.Visible = false end
+    if PanelMenu then PanelMenu.Visible = false end
+    if PanelInfo then PanelInfo.Visible = false end
+    if PanelUpload then PanelUpload.Visible = false end
+end
+
+-- Jalankan pembersihan awal
+clearAllPanels()
+
+-- Atur kondisi awal untuk Sidebar dan Tombol Buka
 PanelUtama.Visible = true
 PanelUtama.BackgroundTransparency = 0.2
-
-if PanelMain then PanelMain.Visible = false end
-if PanelMenu then PanelMenu.Visible = false end
-if PanelInfo then PanelInfo.Visible = false end
-if PanelUpload then PanelUpload.Visible = false end
-
 OpenButton.Visible = false 
 OpenButton.Size = UDim2.new(0, 35, 0, 35)
 
@@ -1239,57 +1245,37 @@ local function updateTabVisual(activeTab)
     end
 end
 
--- 6. FIX LOGIKA UTAMA: Sistem Pengendali Buka-Tutup Per Tombol (Toggle System)
+-- 6. LOGIKA MUTLAK TAB SELECTOR (SISTEM TOGGLE VISIBILITAS MURNI - ANTI-NUMPUK 100%)
 local function toggleTab(targetTab)
-    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    
-    -- Jika tombol yang sama diklik lagi saat panelnya terbuka, maka TUTUP panel tersebut
+    -- JIKA KLIK TOMBOL YANG SAMA SAAT PANEL SEDANG TERBUKA -> TUTUP TOTAL PANEL TERSEBUT
     if currentActiveTab == targetTab then
-        local targetPanel = nil
-        if targetTab == "Main" then targetPanel = PanelMain
-        elseif targetTab == "Menu" then targetPanel = PanelMenu
-        elseif targetTab == "Info" then targetPanel = PanelInfo end
-        
-        if targetPanel then
-            local fadeTween = TweenService:Create(targetPanel, tweenInfo, {BackgroundTransparency = 1})
-            fadeTween:Play()
-            fadeTween.Completed:Connect(function()
-                targetPanel.Visible = false
-            end)
-        end
-        if PanelUpload then PanelUpload.Visible = false end
-        
+        clearAllPanels()
         currentActiveTab = nil
         updateTabVisual(nil)
         return
     end
 
-    -- Sembunyikan panel lain terlebih dahulu sebelum membuka panel yang baru diklik
-    if PanelMain then PanelMain.Visible = false end
-    if PanelMenu then PanelMenu.Visible = false end
-    if PanelInfo then PanelInfo.Visible = false end
-    if PanelUpload then PanelUpload.Visible = false end
+    -- Sapu bersih semua panel yang sedang aktif biar gak tumpuk melayang
+    clearAllPanels()
 
-    -- Set panel target menjadi aktif dan munculkan visualnya
+    -- Daftarkan tab baru sebagai tab aktif
     currentActiveTab = targetTab
     updateTabVisual(targetTab)
 
-    local activePanel = nil
-    if targetTab == "Main" then activePanel = PanelMain
-    elseif targetTab == "Menu" then activePanel = PanelMenu
-    elseif targetTab == "Info" then activePanel = PanelInfo end
-
-    if activePanel then
-        activePanel.BackgroundTransparency = 1
-        activePanel.Visible = true
-        TweenService:Create(activePanel, tweenInfo, {BackgroundTransparency = 0.2}):Play()
+    -- Munculkan murni panel yang dituju secara instan & bersih
+    if targetTab == "Main" then
+        if PanelMain then PanelMain.Visible = true end
+    elseif targetTab == "Menu" then
+        if PanelMenu then PanelMenu.Visible = true end
+    elseif targetTab == "Info" then
+        if PanelInfo then PanelInfo.Visible = true end
     end
 end
 
--- Set default awal: Buka panel Main langsung di awal eksekusi script
+-- Set default awal: Tampilkan panel Main secara bersih di awal pemuatan
 toggleTab("Main")
 
--- 7. Animasi Flash Sekali Kedip untuk Feedback Klik
+-- 7. Animasi Flash Sekali Kedip untuk Feedback Klik Tombol
 local function applyFlashEffect(button)
     if not button then return end
     local oldColor = button.BackgroundColor3
@@ -1332,33 +1318,29 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- 9. Logika Interaksi Menggunakan Animasi Fade-Out & Pop-Up TOTAL PANEL
+-- 9. Logika Interaksi Menggunakan Animasi Fade-Out & Pop-Up TOTAL SIDEBAR PANEL
 CloseButton.MouseButton1Click:Connect(function()
     playClickSound()
     applyFlashEffect(CloseButton)
     
-    -- Kumpulkan seluruh sub-panel aktif untuk ikut di-fade out bersamaan agar bersih sempurna
-    local framesToFade = {PanelUtama, PanelMain, PanelMenu, PanelInfo, PanelUpload}
-    for _, frame in ipairs(framesToFade) do
-        if frame and frame.Visible then
-            TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundTransparency = 1
-            }):Play()
-        end
-    end
+    -- Sembunyikan konten samping dulu biar gak tumpuk melayang
+    clearAllPanels()
     
-    task.wait(0.2)
-    PanelUtama.Visible = false
-    if PanelMain then PanelMain.Visible = false end
-    if PanelMenu then PanelMenu.Visible = false end
-    if PanelInfo then PanelInfo.Visible = false end
-    if PanelUpload then PanelUpload.Visible = false end
+    -- Animasi menyusut/hilang halus khusus Sidebar Utama
+    local fadeTween = TweenService:Create(PanelUtama, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 1
+    })
+    fadeTween:Play()
     
-    OpenButton.Visible = true
-    OpenButton.Size = UDim2.new(0, 0, 0, 0)
-    TweenService:Create(OpenButton, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 35, 0, 35)
-    }):Play()
+    fadeTween.Completed:Connect(function()
+        PanelUtama.Visible = false
+        
+        OpenButton.Visible = true
+        OpenButton.Size = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(OpenButton, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 35, 0, 35)
+        }):Play()
+    end)
 end)
 
 OpenButton.MouseButton1Click:Connect(function()
@@ -1374,17 +1356,21 @@ OpenButton.MouseButton1Click:Connect(function()
         
         PanelUtama.BackgroundTransparency = 1
         PanelUtama.Visible = true
-        TweenService:Create(PanelUtama, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundTransparency = 0.2
-        }):Play()
         
-        -- Kembalikan ingatan tab terakhir sebelum panel ditutup
-        currentActiveTab = nil
-        toggleTab("Main")
+        local openTween = TweenService:Create(PanelUtama, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0.2
+        })
+        openTween:Play()
+        
+        -- Otomatis load ulang keadaan awal ke Tab Main
+        openTween.Completed:Connect(function()
+            currentActiveTab = nil
+            toggleTab("Main")
+        end)
     end)
 end)
 
--- 10. Logika Tombol Navigasi Samping Mengikuti Aturan Buka/Tutup Per Button
+-- 10. Logika Tombol Navigasi Samping (Menu, Main, Info)
 MenuButton.MouseButton1Click:Connect(function()
     playClickSound()
     toggleTab("Menu")
@@ -1400,20 +1386,18 @@ InfoButton.MouseButton1Click:Connect(function()
     toggleTab("Info")
 end)
 
--- 11. Logika Khusus: UploadButton (Buka/Tutup Sub-Panel Upload di Tab Main)
+-- 11. LOGIKA UTUH UPLOAD BUTTON (SISTEM INDEPENDENT TOGGLE CONTROLLER)
 if UploadButton and PanelUpload then
     UploadButton.MouseButton1Click:Connect(function()
         playClickSound()
         applyFlashEffect(UploadButton)
         
+        -- Berfungsi murni membalikkan status kemunculan PanelUpload
         PanelUpload.Visible = not PanelUpload.Visible
-        if PanelUpload.Visible then
-            PanelUpload.BackgroundTransparency = 0.2
-        end
     end)
 end
 
--- 12. Klasifikasi Efek Gradien (Looping Neon Stroke & Efek Shine Mengkilap Button)
+-- 12. Klasifikasi Efek Gradien (Looping Neon Border & Efek Shine Mengkilap Button)
 local strokeGradients = {}
 local buttonShineGradients = {}
 
@@ -1465,7 +1449,7 @@ task.spawn(function()
     end
 end)
 
-print("NARAKU BLOX NEW UI ENGINE FIXED & OPERATIONAL!")
+print("NARAKU BLOX NEW UI ENGINE 100% PERFECT OPERATIONAL!")
 -- =============================================================================
 
 return LMG2L["ScreenGui_1"], require;
