@@ -1452,7 +1452,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FINAL FULL VERSION)
+-- SYSTEM PANEL MENU - PRO EDITOR & EXECUTION ENGINE (FIXED SIZE VERSION)
 -- =============================================================================
 local ScrollingFrame   = LMG2L["ScrollingFrame_2a"] 
 local ScriptBox        = LMG2L["ScriptBox_2c"]      
@@ -1475,17 +1475,17 @@ ScriptBox.TextColor3       = Color3.fromRGB(150, 150, 150)
 ScrollingFrame.Active           = true
 ScrollingFrame.ScrollingEnabled = true
 
--- 2. LOGIKA RESIZING (SANGAT STABIL)
+-- 2. LOGIKA RESIZING (HANYA CANVAS YANG BERUBAH, SCRIPTBOX TETAP)
 local function updateCanvas()
     local textHeight = ScriptBox.TextBounds.Y
-    -- Memastikan ukuran canvas tidak pernah 0 dan mengikuti panjang teks
-    local minSize = 150
-    local newHeight = math.max(textHeight + 40, minSize)
+    -- Ukuran fisik ScriptBox dibiarkan apa adanya (Fixed Size)
+    -- Kita hanya menyesuaikan seberapa jauh user bisa scroll (CanvasSize)
+    local minSize = ScrollingFrame.AbsoluteSize.Y -- Mengikuti tinggi frame utama
+    local newHeight = math.max(textHeight + 20, minSize)
     
     ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, newHeight)
-    ScriptBox.Size            = UDim2.new(1, 0, 0, newHeight)
     
-    -- Auto-scroll ke bawah saat mengetik
+    -- Auto-scroll ke bawah saat mengetik agar cursor terlihat
     if ScriptBox:IsFocused() then
         ScrollingFrame.CanvasPosition = Vector2.new(0, math.max(0, newHeight - ScrollingFrame.AbsoluteWindowSize.Y))
     end
@@ -1499,6 +1499,7 @@ ScriptBox.Focused:Connect(function()
     end
 end)
 
+-- Gunakan GetPropertyChangedSignal pada TextBounds untuk update canvas
 ScriptBox:GetPropertyChangedSignal("TextBounds"):Connect(updateCanvas)
 
 ScriptBox.FocusLost:Connect(function()
@@ -1523,7 +1524,6 @@ ExecuteButton.MouseButton1Click:Connect(function()
     if code == "" or code == DEFAULT_PLACEHOLDER then return end
     
     task.spawn(function()
-        -- Injection bypass yang memaksa environment executor
         local env = getgenv and getgenv() or getfenv()
         local bypass = setmetatable({
             require = env.require or require,
