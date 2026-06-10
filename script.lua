@@ -1307,8 +1307,6 @@ if ScriptBox then
     ScriptBox.MultiLine = true
     ScriptBox.ClipsDescendants = true
     ScriptBox.TextScaled = false
-    ScriptBox.TextSize = 12
-    ScriptBox.Font = Enum.Font.Inconsolata
     
     -- ScriptBox Focus Event - Hapus placeholder saat fokus
     ScriptBox.FocusLost:Connect(function(enterPressed)
