@@ -13,7 +13,7 @@ LMG2L["SidebarFrame_2"] = Instance.new("Frame", LMG2L["NarakuUI_1"]);
 LMG2L["SidebarFrame_2"]["BorderSizePixel"] = 0;
 LMG2L["SidebarFrame_2"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 LMG2L["SidebarFrame_2"]["Size"] = UDim2.new(0, 40, 0, 357);
-LMG2L["SidebarFrame_2"]["Position"] = UDim2.new(1, -42, 0, -25);
+LMG2L["SidebarFrame_2"]["Position"] = UDim2.new(1, -42, 0, 0);
 LMG2L["SidebarFrame_2"]["Name"] = [[SidebarFrame]];
 LMG2L["SidebarFrame_2"]["BackgroundTransparency"] = 0.2;
 
@@ -107,7 +107,7 @@ LMG2L["PanelHome_e"] = Instance.new("Frame", LMG2L["NarakuUI_1"]);
 LMG2L["PanelHome_e"]["BorderSizePixel"] = 0;
 LMG2L["PanelHome_e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 LMG2L["PanelHome_e"]["Size"] = UDim2.new(0, -360, 0, 357);
-LMG2L["PanelHome_e"]["Position"] = UDim2.new(1, -50, 0, -25);
+LMG2L["PanelHome_e"]["Position"] = UDim2.new(1, -50, 0, 0);
 LMG2L["PanelHome_e"]["BorderColor3"] = Color3.fromRGB(56, 56, 56);
 LMG2L["PanelHome_e"]["Name"] = [[PanelHome]];
 LMG2L["PanelHome_e"]["BackgroundTransparency"] = 0.3;
@@ -256,7 +256,7 @@ LMG2L["PanelMain_21"]["Visible"] = false;
 LMG2L["PanelMain_21"]["BorderSizePixel"] = 0;
 LMG2L["PanelMain_21"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 LMG2L["PanelMain_21"]["Size"] = UDim2.new(0, -360, 0, 357);
-LMG2L["PanelMain_21"]["Position"] = UDim2.new(1, -50, 0, -25);
+LMG2L["PanelMain_21"]["Position"] = UDim2.new(1, -50, 0, 0);
 LMG2L["PanelMain_21"]["Name"] = [[PanelMain]];
 LMG2L["PanelMain_21"]["BackgroundTransparency"] = 0.2;
 
@@ -445,7 +445,7 @@ LMG2L["PanelMenu_39"]["Visible"] = false;
 LMG2L["PanelMenu_39"]["BorderSizePixel"] = 0;
 LMG2L["PanelMenu_39"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 LMG2L["PanelMenu_39"]["Size"] = UDim2.new(0, -360, 0, 357);
-LMG2L["PanelMenu_39"]["Position"] = UDim2.new(1, -50, 0, -25);
+LMG2L["PanelMenu_39"]["Position"] = UDim2.new(1, -50, 0, 0);
 LMG2L["PanelMenu_39"]["Name"] = [[PanelMenu]];
 LMG2L["PanelMenu_39"]["BackgroundTransparency"] = 0.3;
 
@@ -848,7 +848,7 @@ LMG2L["OpenButton_68"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
 LMG2L["OpenButton_68"]["Image"] = [[rbxassetid://85521644284429]];
 LMG2L["OpenButton_68"]["Size"] = UDim2.new(0, 35, 0, 35);
 LMG2L["OpenButton_68"]["Name"] = [[OpenButton]];
-LMG2L["OpenButton_68"]["Position"] = UDim2.new(0, 362, 0, -40);
+LMG2L["OpenButton_68"]["Position"] = UDim2.new(1, -40, 0, -43);
 
 
 -- Players.KenDmugiwara01.PlayerGui.NarakuUI.OpenButton.UICorner
@@ -1035,6 +1035,188 @@ MenuButton.MouseButton1Click:Connect(function()
 end)
 
 -- =============================================================================
+-- ULTIMATE MAIN PANEL CORE ENGINE - CORE CONTROLLER (OPEN BUTTON DRAG ONLY)
+-- =============================================================================
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. DEKLARASI REFERENSI OBJEK (BERDASARKAN STRUKTUR LMG2L)
+local ScreenGui    = LMG2L["NarakuUI_1"]
+local SidebarFrame = LMG2L["SidebarFrame_2"]
+local HomeButton   = LMG2L["HomeButton_6"]
+local CloseButton  = LMG2L["CloseButton_8"]
+local MenuButton   = LMG2L["MenuButton_a"]
+local MainButton   = LMG2L["MainButton_c"]
+
+local PanelHome    = LMG2L["PanelHome_e"]
+local PanelMain    = LMG2L["PanelMain_21"]
+-- Mencari PanelMenu secara dinamis jika indeksnya tidak sepenuhnya tercetak di dokumen
+local PanelMenu    = LMG2L["PanelMenu_39"] or ScreenGui:FindFirstChild("PanelMenu")
+
+-- Tombol Open Button (Sesuai dengan OpenButton_68 di bagian bawah dokumen)
+local OpenButton   = LMG2L["OpenButton_68"] or ScreenGui:FindFirstChild("OpenButton")
+
+-- =============================================================================
+-- PILAR UPDATE: KONFIGURASI POSISI BARU MUTLAK (SESUAI REQUEST USER)
+-- =============================================================================
+local FIXED_PANEL_POS   = UDim2.new(1, -50, 0, 0)    -- Posisi Panel Menu, Home, Main
+local FIXED_OPEN_POS    = UDim2.new(1, -40, 0, -43)  -- Posisi Open Button
+local FIXED_SIDEBAR_POS = UDim2.new(1, -42, 0, 0)    -- Posisi Sidebar Frame Baru
+
+-- Mengunci seluruh posisi objek ke koordinat baru secara instan
+if SidebarFrame then SidebarFrame.Position = FIXED_SIDEBAR_POS end
+if PanelHome then PanelHome.Position = FIXED_PANEL_POS end
+if PanelMain then PanelMain.Position = FIXED_PANEL_POS end
+if PanelMenu then PanelMenu.Position = FIXED_PANEL_POS end
+if OpenButton then OpenButton.Position = FIXED_OPEN_POS end
+
+-- =============================================================================
+-- PILAR A: SYSTEM PROTEKSI ANTI-HILANG (COREGUI INJECTOR)
+-- =============================================================================
+ScreenGui.ResetOnSpawn = false
+
+local function injectToCoreGui()
+    local success, err = pcall(function()
+        ScreenGui.Parent = CoreGui
+    end)
+    if not success then
+        ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end
+end
+injectToCoreGui()
+
+-- =============================================================================
+-- PILAR B & C: AUDIO, EFEK FLASH (NAVIGASI) & MIKRO-INTERAKSI VISUAL BUTTON UMUM
+-- =============================================================================
+local SOUND_ID = "rbxassetid://6026984224"
+
+-- Fungsi Pemutar Audio Asynchronous
+local function playClickSound()
+    task.spawn(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = SOUND_ID
+        sound.Volume = 0.5
+        sound.PlayOnRemove = true
+        sound.Parent = workspace
+        sound:Destroy()
+    end)
+end
+
+-- Efek Flash Putih Transparan (Hanya Navigasi Utama)
+local function applyFlashEffect(button)
+    local originalTransparency = button.BackgroundTransparency
+    local originalColor = button.BackgroundColor3
+    
+    button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundTransparency = 0.4
+    
+    TweenService:Create(button, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundColor3 = originalColor,
+        BackgroundTransparency = originalTransparency
+    }):Play()
+end
+
+-- Menyimpan Fallback State Warna Sidebar Buttons
+local fallbackStates = {}
+local navigationButtons = {
+    [HomeButton] = PanelHome,
+    [MainButton] = PanelMain,
+    [MenuButton] = PanelMenu
+}
+
+for btn, _ in pairs(navigationButtons) do
+    if btn then
+        fallbackStates[btn] = {
+            Color = btn.BackgroundColor3,
+            Transparency = btn.BackgroundTransparency
+        }
+    end
+end
+
+-- PILAR C: Mikro-Interaksi Tombol Umum (Di luar Navigasi Utama)
+local function setupGenericButtonVisual(button)
+    local originalSize = button.Size
+    
+    button.MouseButton1Down:Connect(function()
+        button:TweenSize(
+            UDim2.new(originalSize.X.Scale, originalSize.X.Offset * 0.95, originalSize.Y.Scale, originalSize.Y.Offset * 0.95),
+            Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true
+        )
+    end)
+    
+    button.MouseButton1Up:Connect(function()
+        button:TweenSize(originalSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+    end)
+    
+    button.MouseLeave:Connect(function()
+        button:TweenSize(originalSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+    end)
+end
+
+-- Menerapkan Mikro-Interaksi ke Seluruh Sub-Tombol di Dalam Panel
+for _, child in ipairs(ScreenGui:GetDescendants()) do
+    if (child:IsA("TextButton") or child:IsA("ImageButton")) then
+        if child ~= HomeButton and child ~= MainButton and child ~= MenuButton and child ~= CloseButton and child ~= OpenButton then
+            setupGenericButtonVisual(child)
+        end
+    end
+end
+
+-- =============================================================================
+-- PILAR D: SYSTEM NAVIGASI TAB STATE (IN-PLACE TOGGLE)
+-- =============================================================================
+local function switchTab(activeButton)
+    for btn, panel in pairs(navigationButtons) do
+        if panel and btn then
+            if btn == activeButton then
+                panel.Visible = true
+                TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                    BackgroundTransparency = 0.5
+                }):Play()
+            else
+                panel.Visible = false
+                TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = fallbackStates[btn].Color,
+                    BackgroundTransparency = fallbackStates[btn].Transparency
+                }):Play()
+            end
+        end
+    end
+end
+
+-- Registrasi Event Listener Tombol Sidebar
+if HomeButton then
+    HomeButton.MouseButton1Click:Connect(function()
+        playClickSound()
+        applyFlashEffect(HomeButton)
+        switchTab(HomeButton)
+    end)
+end
+
+if MainButton then
+    MainButton.MouseButton1Click:Connect(function()
+        playClickSound()
+        applyFlashEffect(MainButton)
+        switchTab(MainButton)
+    end)
+end
+
+if MenuButton then
+    MenuButton.MouseButton1Click:Connect(function()
+        if PanelMenu then
+            playClickSound()
+            applyFlashEffect(MenuButton)
+            switchTab(MenuButton)
+        end
+    end)
+end
+
+-- =============================================================================
 -- PILAR E: SYSTEM DRAGGING MANUAL STABIL (KHUSUS OPEN BUTTON SAJA)
 -- =============================================================================
 local function enableOpenButtonDrag(dragFrame)
@@ -1071,7 +1253,6 @@ local function enableOpenButtonDrag(dragFrame)
     end)
 end
 
--- Fitur Dragging 100% hanya dipasang ke OpenButton (SidebarFrame Statis Aman)
 if OpenButton then 
     enableOpenButtonDrag(OpenButton) 
 end
@@ -1083,19 +1264,16 @@ local function closeUI()
     playClickSound()
     applyFlashEffect(CloseButton)
     
-    -- 1. Sembunyikan seluruh sub-panel terlebih dahulu
     if PanelHome then PanelHome.Visible = false end
     if PanelMain then PanelMain.Visible = false end
     if PanelMenu then PanelMenu.Visible = false end
     
-    -- Bersihkan warna tab visual
     for btn, state in pairs(fallbackStates) do
         btn.BackgroundColor3 = state.Color
         btn.BackgroundTransparency = state.Transparency
     end
     
-    -- 2. Jalankan Fade Out pada SidebarFrame
-    local fadeTween = TweenService:Create(SidebarFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    local fadeTween = TweenService:Create(SidebarFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         BackgroundTransparency = 1
     })
     fadeTween.Completed:Connect(function()
@@ -1103,13 +1281,12 @@ local function closeUI()
     end)
     fadeTween:Play()
     
-    -- 3. Munculkan OpenButton dengan animasi Pop-Up membesar
     if OpenButton then
         OpenButton.Size = UDim2.new(0, 0, 0, 0)
         OpenButton.Visible = true
         OpenButton:TweenSize(
-            UDim2.new(0, 35, 0, 35), -- Ukuran asli dokumen Anda
-            Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.35, true
+            UDim2.new(0, 35, 0, 35),
+            Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.3, true
         )
     end
 end
@@ -1119,7 +1296,6 @@ local function openUI()
         playClickSound()
         applyFlashEffect(OpenButton)
         
-        -- 1. Kecilkan OpenButton terlebih dahulu sebelum menghilang
         OpenButton:TweenSize(
             UDim2.new(0, 0, 0, 0),
             Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.2, true, function()
@@ -1128,23 +1304,91 @@ local function openUI()
         )
     end
     
-    -- 2. Setel Transparansi Awal ke 1 lalu Fade In secara halus
     SidebarFrame.BackgroundTransparency = 1
     SidebarFrame.Visible = true
     
-    TweenService:Create(SidebarFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        BackgroundTransparency = 0.2 -- Transparansi asli dokumen Anda
+    TweenService:Create(SidebarFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0.2
     }):Play()
     
-    -- 3. Buka Tab Default (Home Panel) secara otomatis
     switchTab(HomeButton)
 end
 
-CloseButton.MouseButton1Click:Connect(closeUI)
+if CloseButton then CloseButton.MouseButton1Click:Connect(closeUI) end
 if OpenButton then OpenButton.MouseButton1Click:Connect(openUI) end
 
--- Inisialisasi Awal: Buka Home Tab secara default saat skrip pertama kali berjalan
-switchTab(HomeButton)
+-- =============================================================================
+-- ANIMASI INTRO KEMUNCULAN PERTAMA KALI (MURNI FADE & POP-UP, TANPA GESER POSISI)
+-- =============================================================================
+local function runPremiumIntro()
+    if OpenButton then OpenButton.Visible = false end
+    
+    -- Amankan kondisi visibilitas awal sidebar menggunakan transparansi penuh
+    SidebarFrame.BackgroundTransparency = 1
+    SidebarFrame.Visible = true
+    
+    -- Sembunyikan seluruh tombol utama sidebar untuk memicu animasi pop-up estetik secara beruntun
+    local initialElements = {HomeButton, MainButton, MenuButton, CloseButton}
+    local cachedSizes = {}
+    
+    for _, element in ipairs(initialElements) do
+        if element then
+            cachedSizes[element] = element.Size
+            element.Size = UDim2.new(0, 0, 0, 0) -- Dikecilkan total ke pusatnya
+        end
+    end
+    
+    -- Aktifkan Tab Default (PanelHome)
+    switchTab(HomeButton)
+    
+    -- Memanfaatkan CanvasGroup untuk melakukan efek Fade In konten yang stabil & sangat ringan
+    if PanelHome then
+        local canvasGroup = PanelHome:FindFirstChildOfClass("CanvasGroup") or Instance.new("CanvasGroup", PanelHome)
+        if canvasGroup.Name ~= "IntroGroup" then
+            canvasGroup.Name = "IntroGroup"
+            canvasGroup.Size = UDim2.new(1, 0, 1, 0)
+            canvasGroup.BackgroundTransparency = 1
+            canvasGroup.BorderSizePixel = 0
+            
+            -- Memindahkan anak objek panel ke dalam CanvasGroup agar efek fadenya sempurna
+            for _, item in ipairs(PanelHome:GetChildren()) do
+                if item ~= canvasGroup and not item:IsA("UIConstraint") then
+                    item.Parent = canvasGroup
+                end
+            end
+        end
+        canvasGroup.GroupTransparency = 1
+        
+        task.wait(0.05) -- Penyelarasan siklus render Roblox
+        
+        -- 1. Fade-In latar belakang SidebarFrame secara halus di tempat aslinya
+        TweenService:Create(SidebarFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0.2
+        }):Play()
+        
+        -- 2. Efek Pop-Up Berantai (Staggered Animation) tombol sidebar tanpa mengganggu posisi koordinat
+        task.spawn(function()
+            for _, element in ipairs(initialElements) do
+                if element and cachedSizes[element] then
+                    element:TweenSize(cachedSizes[element], Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.3, true)
+                    task.wait(0.06) -- Jeda mikro antar tombol agar terkesan premium
+                end
+            end
+        end)
+        
+        -- 3. Fade-In mulus untuk seluruh isi Konten Panel Utama (Home Panel)
+        TweenService:Create(canvasGroup, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            GroupTransparency = 0
+        }):Play()
+    else
+        -- Sistem proteksi jika objek panel gagal tervalidasi sempurna
+        SidebarFrame.BackgroundTransparency = 0.2
+        switchTab(HomeButton)
+    end
+end
+
+-- Eksekusi sistem animasi intro ringan bawaan engine
+runPremiumIntro()
 
 -- =============================================================================
 -- PILAR G: AUTOMATED UIGRADIENT CONTROLLER ENGINE
@@ -1167,17 +1411,16 @@ task.spawn(function()
     while true do
         for _, obj in ipairs(ScreenGui:GetDescendants()) do
             if obj:IsA("UIGradient") and (obj.Parent:IsA("ImageButton") or obj.Parent:IsA("TextButton")) then
-                -- Menjalankan siklus kilatan dari kiri ke kanan
                 task.spawn(function()
                     for progress = -100, 100, 5 do
                         obj.Offset = Vector2.new(progress / 100, 0)
                         task.wait(0.01)
                     end
-                    obj.Offset = Vector2.new(-1, 0) -- Reset kembali ke kiri luar
+                    obj.Offset = Vector2.new(-1, 0)
                 end)
             end
         end
-        task.wait(1.5) -- Jeda alami berkala sebelum pengulangan efek berikutnya
+        task.wait(1.5)
     end
 end)
 
