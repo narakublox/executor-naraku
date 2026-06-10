@@ -117,7 +117,7 @@ LMG2L["PanelHome_e"]["BackgroundTransparency"] = 0.3;
 LMG2L["TextTitle_f"] = Instance.new("TextLabel", LMG2L["PanelHome_e"]);
 LMG2L["TextTitle_f"]["BorderSizePixel"] = 0;
 LMG2L["TextTitle_f"]["TextSize"] = 18;
-LMG2L["TextTitle_f"]["BackgroundColor3"] = Color3.fromRGB(27, 27, 27);
+LMG2L["TextTitle_f"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 LMG2L["TextTitle_f"]["FontFace"] = Font.new([[rbxasset://fonts/families/Sarpanch.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
 LMG2L["TextTitle_f"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
 LMG2L["TextTitle_f"]["Size"] = UDim2.new(0, 360, 0, 30);
@@ -154,7 +154,7 @@ LMG2L["SearchBox_14"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
 LMG2L["SearchBox_14"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 LMG2L["SearchBox_14"]["Size"] = UDim2.new(0, 352, 0, 24);
 LMG2L["SearchBox_14"]["Position"] = UDim2.new(0, 4, 0, 34);
-LMG2L["SearchBox_14"]["Text"] = [[Search script...]];
+LMG2L["SearchBox_14"]["Text"] = [[Search for Script...]];
 LMG2L["SearchBox_14"]["BackgroundTransparency"] = 0.5;
 
 
