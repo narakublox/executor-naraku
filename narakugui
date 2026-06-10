@@ -1289,7 +1289,7 @@ local PanelMain = LMG2L["PanelMain_21"]
 -- Komponen Utama Panel Home
 local SearchBox = PanelHome:WaitForChild("SearchBox")
 local ScrollingHome = PanelHome:WaitForChild("ScrollingFrame")
-local SampleTemplate = ScrollingHome:WaitForChild("NameTitle") -- Template clone dasar
+local SampleTemplate = ScrollingHome:WaitForChild("NameTitle") -- Template clone dasar (TextLabel)
 
 -- Komponen Utama Panel Main
 local TitleBox = PanelMain:WaitForChild("TitleBox")
@@ -1391,20 +1391,35 @@ local function refreshHomeList(searchFilter)
             clone.Name = "Cloud_" .. cloudData.Name
             clone.Visible = true
             
-            -- Hilangkan tombol Delete khusus untuk item Cloud Script
-            if clone:FindFirstChild("DeleteButton") then
-                clone.DeleteButton.Visible = false
+            -- Menyelaraskan referensi tombol berdasarkan struktur dokumen LMG2L Anda
+            local buttons = {}
+            for _, child in ipairs(clone:GetChildren()) do
+                if child:IsA("TextButton") or child:IsA("ImageButton") then
+                    table.insert(buttons, child)
+                end
+            end
+            
+            -- Berdasarkan urutan pembuatan UI di dokumen: tombol pertama = Execute, tombol kedua = Delete
+            local execBtn = buttons[1] or clone:FindFirstChild("ExecuteButton")
+            local delBtn  = buttons[2] or clone:FindFirstChild("DeleteButton")
+
+            -- Hilangkan tombol Delete khusus untuk Cloud Script
+            if delBtn then
+                delBtn.Visible = false
             end
 
             -- Integrasi Fungsi Execute Cloud
-            clone.ExecuteButton.MouseButton1Click:Connect(function()
-                local rawCode = fetchUrl(cloudData.Url)
-                if rawCode then
-                    executeCode(rawCode)
-                else
-                    warn("[NARAKU CLOUD]: Gagal mengunduh script dari source URL.")
-                end
-            end)
+            if execBtn then
+                execBtn.MouseButton1Click:Connect(function()
+                    local rawCode = fetchUrl(cloudData.Url)
+                    if rawCode then
+                        executeCode(rawCode)
+                    else
+                        warn("[NARAKU CLOUD]: Gagal mengunduh script dari source URL.")
+                    end
+                end)
+            end
+            
             clone.Parent = ScrollingHome
         end
     end
@@ -1422,20 +1437,35 @@ local function refreshHomeList(searchFilter)
                 clone.Name = "Local_" .. scriptTitle
                 clone.Visible = true
 
-                -- Integrasi Fungsi Execute Lokal
-                clone.ExecuteButton.MouseButton1Click:Connect(function()
-                    local successRead, codeContent = pcall(function() return readfile(filePath) end)
-                    if successRead then
-                        executeCode(codeContent)
+                -- Menyelaraskan referensi tombol dari objek anak lokal
+                local buttons = {}
+                for _, child in ipairs(clone:GetChildren()) do
+                    if child:IsA("TextButton") or child:IsA("ImageButton") then
+                        table.insert(buttons, child)
                     end
-                end)
+                end
+                
+                local execBtn = buttons[1] or clone:FindFirstChild("ExecuteButton")
+                local delBtn  = buttons[2] or clone:FindFirstChild("DeleteButton")
+
+                -- Integrasi Fungsi Execute Lokal
+                if execBtn then
+                    execBtn.MouseButton1Click:Connect(function()
+                        local successRead, codeContent = pcall(function() return readfile(filePath) end)
+                        if successRead then
+                            executeCode(codeContent)
+                        end
+                    end)
+                end
 
                 -- Integrasi Fungsi Delete Lokal
-                clone.DeleteButton.MouseButton1Click:Connect(function()
-                    pcall(function() delfile(filePath) end)
-                    local currentSearch = (SearchBox.Text ~= "Search for Script..." and SearchBox.Text ~= "") and SearchBox.Text or ""
-                    refreshHomeList(currentSearch)
-                end)
+                if delBtn then
+                    delBtn.MouseButton1Click:Connect(function()
+                        pcall(function() delfile(filePath) end)
+                        local currentSearch = (SearchBox.Text ~= "Search for Script..." and SearchBox.Text ~= "") and SearchBox.Text or ""
+                        refreshHomeList(currentSearch)
+                    end)
+                end
 
                 clone.Parent = ScrollingHome
             end
@@ -1463,7 +1493,7 @@ local function setupSmartPlaceholder(textBox, placeholderText)
     end)
 end
 
--- Terapkan sistem auto-clear dan auto-restore ke seluruh komponen TextBox
+-- Terapkan sistem auto-clear dan auto-restore ke seluruh komponen TextBox sesuai instruksi
 setupSmartPlaceholder(SearchBox, "Search for Script...")
 setupSmartPlaceholder(TitleBox, "Enter Your Title...")
 setupSmartPlaceholder(ScriptBox, "print('Hello World')")
@@ -1501,7 +1531,7 @@ AddScriptBtn.MouseButton1Click:Connect(function()
     end)
 
     if successWrite then
-        TitleBox.Text = "Enter Your Title..." -- Kembalikan ke text placeholder semula
+        TitleBox.Text = "Enter Your Title..." -- Kembalikan ke text placeholder semula secara otomatis
         local currentSearch = (SearchBox.Text ~= "Search for Script..." and SearchBox.Text ~= "") and SearchBox.Text or ""
         refreshHomeList(currentSearch)
     else
