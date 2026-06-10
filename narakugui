@@ -893,174 +893,6 @@ local PanelMenu    = LMG2L["PanelMenu_39"] or ScreenGui:FindFirstChild("PanelMen
 local OpenButton   = LMG2L["OpenButton_68"] or ScreenGui:FindFirstChild("OpenButton")
 
 -- =============================================================================
--- PILAR A: SYSTEM PROTEKSI ANTI-HILANG (COREGUI INJECTOR)
--- =============================================================================
-ScreenGui.ResetOnSpawn = false
-
-local function injectToCoreGui()
-    local success, err = pcall(function()
-        ScreenGui.Parent = CoreGui
-    end)
-    if not success then
-        ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-    end
-end
-injectToCoreGui()
-
--- =============================================================================
--- PILAR B & C: AUDIO, EFEK FLASH (NAVIGASI) & MIKRO-INTERAKSI VISUAL BUTTON UMUM
--- =============================================================================
-local SOUND_ID = "rbxassetid://6026984224"
-
--- Fungsi Pemutar Audio Asynchronous
-local function playClickSound()
-    task.spawn(function()
-        local sound = Instance.new("Sound")
-        sound.SoundId = SOUND_ID
-        sound.Volume = 0.5
-        sound.PlayOnRemove = true
-        sound.Parent = workspace
-        sound:Destroy()
-    end)
-end
-
--- Efek Flash Putih Transparan (Hanya Navigasi Utama)
-local function applyFlashEffect(button)
-    local originalTransparency = button.BackgroundTransparency
-    local originalColor = button.BackgroundColor3
-    
-    button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    button.BackgroundTransparency = 0.4
-    
-    TweenService:Create(button, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        BackgroundColor3 = originalColor,
-        BackgroundTransparency = originalTransparency
-    }):Play()
-end
-
--- Menyimpan Fallback State Warna Sidebar Buttons
-local fallbackStates = {}
-local navigationButtons = {
-    [HomeButton] = PanelHome,
-    [MainButton] = PanelMain,
-    [MenuButton] = PanelMenu
-}
-
-for btn, _ in pairs(navigationButtons) do
-    fallbackStates[btn] = {
-        Color = btn.BackgroundColor3,
-        Transparency = btn.BackgroundTransparency
-    }
-end
-
--- PILAR C: Mikro-Interaksi Tombol Umum (Di luar Navigasi Utama)
-local function setupGenericButtonVisual(button)
-    local originalSize = button.Size
-    
-    button.MouseButton1Down:Connect(function()
-        -- Mengecilkan ukuran sebesar 5% (skala 0.95) saat ditekan
-        button:TweenSize(
-            UDim2.new(originalSize.X.Scale, originalSize.X.Offset * 0.95, originalSize.Y.Scale, originalSize.Y.Offset * 0.95),
-            Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true
-        )
-    end)
-    
-    button.MouseButton1Up:Connect(function()
-        -- Mengembalikan ukuran semula saat dilepas
-        button:TweenSize(originalSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
-    end)
-    
-    button.MouseLeave:Connect(function()
-        -- Proteksi jika cursor user keluar area tombol saat menekan
-        button:TweenSize(originalSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
-    end)
-end
-
--- Menerapkan Mikro-Interaksi ke Seluruh Sub-Tombol di Dalam Panel
-for _, child in ipairs(ScreenGui:GetDescendants()) do
-    if (child:IsA("TextButton") or child:IsA("ImageButton")) then
-        -- Kecualikan navigasi utama dari mikro-interaksi tombol biasa
-        if child ~= HomeButton and child ~= MainButton and child ~= MenuButton and child ~= CloseButton and child ~= OpenButton then
-            setupGenericButtonVisual(child)
-        end
-    end
-end
-
--- =============================================================================
--- PILAR D: SYSTEM NAVIGASI TAB STATE (IN-PLACE TOGGLE)
--- =============================================================================
-local function switchTab(activeButton)
-    for btn, panel in pairs(navigationButtons) do
-        if panel then
-            if btn == activeButton then
-                -- Aktifkan Panel Utama terkait di tempatnya
-                panel.Visible = true
-                -- Highlight visual tombol aktif (Putih Transparan 0.5)
-                TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                    BackgroundTransparency = 0.5
-                }):Play()
-            else
-                -- Sembunyikan panel lainnya
-                panel.Visible = false
-                -- Kembalikan tombol non-aktif ke fallback state semula secara smooth
-                TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                    BackgroundColor3 = fallbackStates[btn].Color,
-                    BackgroundTransparency = fallbackStates[btn].Transparency
-                }):Play()
-            end
-        end
-    end
-end
-
--- Registrasi Event Listener Tombol Sidebar
-HomeButton.MouseButton1Click:Connect(function()
-    playClickSound()
-    applyFlashEffect(HomeButton)
-    switchTab(HomeButton)
-end)
-
-MainButton.MouseButton1Click:Connect(function()
-    playClickSound()
-    applyFlashEffect(MainButton)
-    switchTab(MainButton)
-end)
-
-MenuButton.MouseButton1Click:Connect(function()
-    if PanelMenu then
-        playClickSound()
-        applyFlashEffect(MenuButton)
-        switchTab(MenuButton)
-    end
-end)
-
--- =============================================================================
--- ULTIMATE MAIN PANEL CORE ENGINE - CORE CONTROLLER (OPEN BUTTON DRAG ONLY)
--- =============================================================================
-
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
--- 1. DEKLARASI REFERENSI OBJEK (BERDASARKAN STRUKTUR LMG2L)
-local ScreenGui    = LMG2L["NarakuUI_1"]
-local SidebarFrame = LMG2L["SidebarFrame_2"]
-local HomeButton   = LMG2L["HomeButton_6"]
-local CloseButton  = LMG2L["CloseButton_8"]
-local MenuButton   = LMG2L["MenuButton_a"]
-local MainButton   = LMG2L["MainButton_c"]
-
-local PanelHome    = LMG2L["PanelHome_e"]
-local PanelMain    = LMG2L["PanelMain_21"]
--- Mencari PanelMenu secara dinamis jika indeksnya tidak sepenuhnya tercetak di dokumen
-local PanelMenu    = LMG2L["PanelMenu_39"] or ScreenGui:FindFirstChild("PanelMenu")
-
--- Tombol Open Button (Sesuai dengan OpenButton_68 di bagian bawah dokumen)
-local OpenButton   = LMG2L["OpenButton_68"] or ScreenGui:FindFirstChild("OpenButton")
-
--- =============================================================================
 -- PILAR UPDATE: KONFIGURASI POSISI BARU MUTLAK (SESUAI REQUEST USER)
 -- =============================================================================
 local FIXED_PANEL_POS   = UDim2.new(1, -50, 0, 0)    -- Posisi Panel Menu, Home, Main
@@ -1318,76 +1150,98 @@ if CloseButton then CloseButton.MouseButton1Click:Connect(closeUI) end
 if OpenButton then OpenButton.MouseButton1Click:Connect(openUI) end
 
 -- =============================================================================
--- ANIMASI INTRO KEMUNCULAN PERTAMA KALI (MURNI FADE & POP-UP, TANPA GESER POSISI)
+-- FIX & UPDATE: ANIMASI INTRO KEMUNCULAN GLOBAL + FIX BUG SUDUT LANCIP PANEL
 -- =============================================================================
 local function runPremiumIntro()
     if OpenButton then OpenButton.Visible = false end
     
-    -- Amankan kondisi visibilitas awal sidebar menggunakan transparansi penuh
+    -- 1. Reduksi transparansi awal Sidebar secara murni tanpa merusak posisi X/Y
     SidebarFrame.BackgroundTransparency = 1
     SidebarFrame.Visible = true
     
-    -- Sembunyikan seluruh tombol utama sidebar untuk memicu animasi pop-up estetik secara beruntun
+    -- 2. Sembunyikan elemen navigasi internal untuk memicu animasi pop-up estetik
     local initialElements = {HomeButton, MainButton, MenuButton, CloseButton}
     local cachedSizes = {}
     
     for _, element in ipairs(initialElements) do
         if element then
             cachedSizes[element] = element.Size
-            element.Size = UDim2.new(0, 0, 0, 0) -- Dikecilkan total ke pusatnya
+            element.Size = UDim2.new(0, 0, 0, 0)
         end
     end
     
-    -- Aktifkan Tab Default (PanelHome)
+    -- 3. Mengaktifkan Tab Awal secara logis
     switchTab(HomeButton)
     
-    -- Memanfaatkan CanvasGroup untuk melakukan efek Fade In konten yang stabil & sangat ringan
-    if PanelHome then
-        local canvasGroup = PanelHome:FindFirstChildOfClass("CanvasGroup") or Instance.new("CanvasGroup", PanelHome)
-        if canvasGroup.Name ~= "IntroGroup" then
-            canvasGroup.Name = "IntroGroup"
-            canvasGroup.Size = UDim2.new(1, 0, 1, 0)
-            canvasGroup.BackgroundTransparency = 1
-            canvasGroup.BorderSizePixel = 0
+    -- 4. INTEGRASI CANVASGROUP GLOBAL YANG MENJAGA KELENGKUNGAN UICORNER ASLI
+    local targetPanels = {PanelHome, PanelMain, PanelMenu}
+    local canvasGroups = {}
+    
+    for _, panel in ipairs(targetPanels) do
+        if panel then
+            -- Cari UICorner struktural bawaan panel Anda
+            local existingCorner = panel:FindFirstChildOfClass("UICorner")
             
-            -- Memindahkan anak objek panel ke dalam CanvasGroup agar efek fadenya sempurna
-            for _, item in ipairs(PanelHome:GetChildren()) do
-                if item ~= canvasGroup and not item:IsA("UIConstraint") then
-                    item.Parent = canvasGroup
+            local canvasGroup = panel:FindFirstChild("IntroGroup")
+            if not canvasGroup then
+                canvasGroup = Instance.new("CanvasGroup")
+                canvasGroup.Name = "IntroGroup"
+                canvasGroup.Size = UDim2.new(1, 0, 1, 0)
+                canvasGroup.BackgroundTransparency = 1
+                canvasGroup.BorderSizePixel = 0
+                
+                -- Pindahkan hierarki konten asli ke dalam grup pelindung animasi fade
+                for _, item in ipairs(panel:GetChildren()) do
+                    if item ~= canvasGroup and not item:IsA("UIConstraint") and item ~= existingCorner then
+                        item.Parent = canvasGroup
+                    end
                 end
+                
+                -- SOLUSI ANTI LANCIP: Duplikasi objek UICorner langsung ke dalam CanvasGroup 
+                -- agar engine memotong (clip) batas render mengikuti kurva sudut melengkung
+                if existingCorner then
+                    local cornerClone = existingCorner:Clone()
+                    cornerClone.Parent = canvasGroup
+                end
+                
+                canvasGroup.Parent = panel
+            end
+            
+            canvasGroup.GroupTransparency = 1
+            canvasGroups[panel] = canvasGroup
+        end
+    end
+    
+    task.wait(0.05) -- Penyelarasan frame rate client game
+    
+    -- [EKSEKUSI ANIMASI TRANSISI INTRO SERENTAK]
+    
+    -- A. Memudarkan Masuk Latar Belakang Sidebar
+    TweenService:Create(SidebarFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0.2
+    }):Play()
+    
+    -- B. Animasi Berantai (Staggered Pop-Up) Tombol Navigasi Sidebar
+    task.spawn(function()
+        for _, element in ipairs(initialElements) do
+            if element and cachedSizes[element] then
+                element:TweenSize(cachedSizes[element], Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.3, true)
+                task.wait(0.05)
             end
         end
-        canvasGroup.GroupTransparency = 1
-        
-        task.wait(0.05) -- Penyelarasan siklus render Roblox
-        
-        -- 1. Fade-In latar belakang SidebarFrame secara halus di tempat aslinya
-        TweenService:Create(SidebarFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundTransparency = 0.2
-        }):Play()
-        
-        -- 2. Efek Pop-Up Berantai (Staggered Animation) tombol sidebar tanpa mengganggu posisi koordinat
-        task.spawn(function()
-            for _, element in ipairs(initialElements) do
-                if element and cachedSizes[element] then
-                    element:TweenSize(cachedSizes[element], Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.3, true)
-                    task.wait(0.06) -- Jeda mikro antar tombol agar terkesan premium
-                end
-            end
-        end)
-        
-        -- 3. Fade-In mulus untuk seluruh isi Konten Panel Utama (Home Panel)
-        TweenService:Create(canvasGroup, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            GroupTransparency = 0
-        }):Play()
-    else
-        -- Sistem proteksi jika objek panel gagal tervalidasi sempurna
-        SidebarFrame.BackgroundTransparency = 0.2
-        switchTab(HomeButton)
+    end)
+    
+    -- C. Memudarkan Lembut Seluruh Isi Konten Panel Utama (Home, Main, Menu) Sekaligus
+    for panel, group in pairs(canvasGroups) do
+        if group then
+            TweenService:Create(group, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                GroupTransparency = 0
+            }):Play()
+        end
     end
 end
 
--- Eksekusi sistem animasi intro ringan bawaan engine
+-- Eksekusi Utama Animasi Kemunculan Sempurna
 runPremiumIntro()
 
 -- =============================================================================
