@@ -866,6 +866,319 @@ LMG2L["UIGradient_6b"] = Instance.new("UIGradient", LMG2L["UIStroke_6a"]);
 LMG2L["UIGradient_6b"]["Rotation"] = 15;
 LMG2L["UIGradient_6b"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.500, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
 
+-- =============================================================================
+-- ULTIMATE MAIN PANEL CORE ENGINE - CORE CONTROLLER (OPEN BUTTON DRAG ONLY)
+-- =============================================================================
 
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. DEKLARASI REFERENSI OBJEK (BERDASARKAN STRUKTUR LMG2L)
+local ScreenGui    = LMG2L["NarakuUI_1"]
+local SidebarFrame = LMG2L["SidebarFrame_2"]
+local HomeButton   = LMG2L["HomeButton_6"]
+local CloseButton  = LMG2L["CloseButton_8"]
+local MenuButton   = LMG2L["MenuButton_a"]
+local MainButton   = LMG2L["MainButton_c"]
+
+local PanelHome    = LMG2L["PanelHome_e"]
+local PanelMain    = LMG2L["PanelMain_21"]
+-- Mencari PanelMenu secara dinamis jika indeksnya tidak sepenuhnya tercetak di dokumen
+local PanelMenu    = LMG2L["PanelMenu_39"] or ScreenGui:FindFirstChild("PanelMenu")
+
+-- Tombol Open Button (Sesuai dengan OpenButton_68 di bagian bawah dokumen)
+local OpenButton   = LMG2L["OpenButton_68"] or ScreenGui:FindFirstChild("OpenButton")
+
+-- =============================================================================
+-- PILAR A: SYSTEM PROTEKSI ANTI-HILANG (COREGUI INJECTOR)
+-- =============================================================================
+ScreenGui.ResetOnSpawn = false
+
+local function injectToCoreGui()
+    local success, err = pcall(function()
+        ScreenGui.Parent = CoreGui
+    end)
+    if not success then
+        ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end
+end
+injectToCoreGui()
+
+-- =============================================================================
+-- PILAR B & C: AUDIO, EFEK FLASH (NAVIGASI) & MIKRO-INTERAKSI VISUAL BUTTON UMUM
+-- =============================================================================
+local SOUND_ID = "rbxassetid://6026984224"
+
+-- Fungsi Pemutar Audio Asynchronous
+local function playClickSound()
+    task.spawn(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = SOUND_ID
+        sound.Volume = 0.5
+        sound.PlayOnRemove = true
+        sound.Parent = workspace
+        sound:Destroy()
+    end)
+end
+
+-- Efek Flash Putih Transparan (Hanya Navigasi Utama)
+local function applyFlashEffect(button)
+    local originalTransparency = button.BackgroundTransparency
+    local originalColor = button.BackgroundColor3
+    
+    button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundTransparency = 0.4
+    
+    TweenService:Create(button, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundColor3 = originalColor,
+        BackgroundTransparency = originalTransparency
+    }):Play()
+end
+
+-- Menyimpan Fallback State Warna Sidebar Buttons
+local fallbackStates = {}
+local navigationButtons = {
+    [HomeButton] = PanelHome,
+    [MainButton] = PanelMain,
+    [MenuButton] = PanelMenu
+}
+
+for btn, _ in pairs(navigationButtons) do
+    fallbackStates[btn] = {
+        Color = btn.BackgroundColor3,
+        Transparency = btn.BackgroundTransparency
+    }
+end
+
+-- PILAR C: Mikro-Interaksi Tombol Umum (Di luar Navigasi Utama)
+local function setupGenericButtonVisual(button)
+    local originalSize = button.Size
+    
+    button.MouseButton1Down:Connect(function()
+        -- Mengecilkan ukuran sebesar 5% (skala 0.95) saat ditekan
+        button:TweenSize(
+            UDim2.new(originalSize.X.Scale, originalSize.X.Offset * 0.95, originalSize.Y.Scale, originalSize.Y.Offset * 0.95),
+            Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true
+        )
+    end)
+    
+    button.MouseButton1Up:Connect(function()
+        -- Mengembalikan ukuran semula saat dilepas
+        button:TweenSize(originalSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+    end)
+    
+    button.MouseLeave:Connect(function()
+        -- Proteksi jika cursor user keluar area tombol saat menekan
+        button:TweenSize(originalSize, Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+    end)
+end
+
+-- Menerapkan Mikro-Interaksi ke Seluruh Sub-Tombol di Dalam Panel
+for _, child in ipairs(ScreenGui:GetDescendants()) do
+    if (child:IsA("TextButton") or child:IsA("ImageButton")) then
+        -- Kecualikan navigasi utama dari mikro-interaksi tombol biasa
+        if child ~= HomeButton and child ~= MainButton and child ~= MenuButton and child ~= CloseButton and child ~= OpenButton then
+            setupGenericButtonVisual(child)
+        end
+    end
+end
+
+-- =============================================================================
+-- PILAR D: SYSTEM NAVIGASI TAB STATE (IN-PLACE TOGGLE)
+-- =============================================================================
+local function switchTab(activeButton)
+    for btn, panel in pairs(navigationButtons) do
+        if panel then
+            if btn == activeButton then
+                -- Aktifkan Panel Utama terkait di tempatnya
+                panel.Visible = true
+                -- Highlight visual tombol aktif (Putih Transparan 0.5)
+                TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                    BackgroundTransparency = 0.5
+                }):Play()
+            else
+                -- Sembunyikan panel lainnya
+                panel.Visible = false
+                -- Kembalikan tombol non-aktif ke fallback state semula secara smooth
+                TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = fallbackStates[btn].Color,
+                    BackgroundTransparency = fallbackStates[btn].Transparency
+                }):Play()
+            end
+        end
+    end
+end
+
+-- Registrasi Event Listener Tombol Sidebar
+HomeButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    applyFlashEffect(HomeButton)
+    switchTab(HomeButton)
+end)
+
+MainButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    applyFlashEffect(MainButton)
+    switchTab(MainButton)
+end)
+
+MenuButton.MouseButton1Click:Connect(function()
+    if PanelMenu then
+        playClickSound()
+        applyFlashEffect(MenuButton)
+        switchTab(MenuButton)
+    end
+end)
+
+-- =============================================================================
+-- PILAR E: SYSTEM DRAGGING MANUAL STABIL (KHUSUS OPEN BUTTON SAJA)
+-- =============================================================================
+local function enableOpenButtonDrag(dragFrame)
+    local dragging, dragInput, dragStart, startPos
+    
+    dragFrame.InputBegan:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            dragging = true
+            dragStart = input.Position
+            startPos = dragFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    dragFrame.InputChanged:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            dragFrame.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X, 
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- Fitur Dragging 100% hanya dipasang ke OpenButton (SidebarFrame Statis Aman)
+if OpenButton then 
+    enableOpenButtonDrag(OpenButton) 
+end
+
+-- =============================================================================
+-- PILAR F: ANIMASI TRANSISI CLOSE & OPEN (FADE & POP UP)
+-- =============================================================================
+local function closeUI()
+    playClickSound()
+    applyFlashEffect(CloseButton)
+    
+    -- 1. Sembunyikan seluruh sub-panel terlebih dahulu
+    if PanelHome then PanelHome.Visible = false end
+    if PanelMain then PanelMain.Visible = false end
+    if PanelMenu then PanelMenu.Visible = false end
+    
+    -- Bersihkan warna tab visual
+    for btn, state in pairs(fallbackStates) do
+        btn.BackgroundColor3 = state.Color
+        btn.BackgroundTransparency = state.Transparency
+    end
+    
+    -- 2. Jalankan Fade Out pada SidebarFrame
+    local fadeTween = TweenService:Create(SidebarFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 1
+    })
+    fadeTween.Completed:Connect(function()
+        SidebarFrame.Visible = false
+    end)
+    fadeTween:Play()
+    
+    -- 3. Munculkan OpenButton dengan animasi Pop-Up membesar
+    if OpenButton then
+        OpenButton.Size = UDim2.new(0, 0, 0, 0)
+        OpenButton.Visible = true
+        OpenButton:TweenSize(
+            UDim2.new(0, 35, 0, 35), -- Ukuran asli dokumen Anda
+            Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.35, true
+        )
+    end
+end
+
+local function openUI()
+    if OpenButton then
+        playClickSound()
+        applyFlashEffect(OpenButton)
+        
+        -- 1. Kecilkan OpenButton terlebih dahulu sebelum menghilang
+        OpenButton:TweenSize(
+            UDim2.new(0, 0, 0, 0),
+            Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.2, true, function()
+                OpenButton.Visible = false
+            end
+        )
+    end
+    
+    -- 2. Setel Transparansi Awal ke 1 lalu Fade In secara halus
+    SidebarFrame.BackgroundTransparency = 1
+    SidebarFrame.Visible = true
+    
+    TweenService:Create(SidebarFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0.2 -- Transparansi asli dokumen Anda
+    }):Play()
+    
+    -- 3. Buka Tab Default (Home Panel) secara otomatis
+    switchTab(HomeButton)
+end
+
+CloseButton.MouseButton1Click:Connect(closeUI)
+if OpenButton then OpenButton.MouseButton1Click:Connect(openUI) end
+
+-- Inisialisasi Awal: Buka Home Tab secara default saat skrip pertama kali berjalan
+switchTab(HomeButton)
+
+-- =============================================================================
+-- PILAR G: AUTOMATED UIGRADIENT CONTROLLER ENGINE
+-- =============================================================================
+
+-- Thread 1: Rotasi Konstan UIStroke UIGradient
+task.spawn(function()
+    while true do
+        for _, obj in ipairs(ScreenGui:GetDescendants()) do
+            if obj:IsA("UIGradient") and obj.Parent:IsA("UIStroke") then
+                obj.Rotation = (obj.Rotation + 2) % 360
+            end
+        end
+        task.wait(0.02)
+    end
+end)
+
+-- Thread 2: Shine Effect Horizontal Pada Tombol (ImageButton / TextButton)
+task.spawn(function()
+    while true do
+        for _, obj in ipairs(ScreenGui:GetDescendants()) do
+            if obj:IsA("UIGradient") and (obj.Parent:IsA("ImageButton") or obj.Parent:IsA("TextButton")) then
+                -- Menjalankan siklus kilatan dari kiri ke kanan
+                task.spawn(function()
+                    for progress = -100, 100, 5 do
+                        obj.Offset = Vector2.new(progress / 100, 0)
+                        task.wait(0.01)
+                    end
+                    obj.Offset = Vector2.new(-1, 0) -- Reset kembali ke kiri luar
+                end)
+            end
+        end
+        task.wait(1.5) -- Jeda alami berkala sebelum pengulangan efek berikutnya
+    end
+end)
 
 return LMG2L["NarakuUI_1"], require;
