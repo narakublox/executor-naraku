@@ -146,40 +146,12 @@ LMG2L["UIGradient_13"]["Rotation"] = 54;
 LMG2L["UIGradient_13"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.500, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
 
 
--- Players.KenDmugiwara01.PlayerGui.NarakuUI.PanelHome.SearchBox
-LMG2L["SearchBox_14"] = Instance.new("TextBox", LMG2L["PanelHome_e"]);
-LMG2L["SearchBox_14"]["Name"] = [[SearchBox]];
-LMG2L["SearchBox_14"]["BorderSizePixel"] = 0;
-LMG2L["SearchBox_14"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-LMG2L["SearchBox_14"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-LMG2L["SearchBox_14"]["Size"] = UDim2.new(0, 352, 0, 24);
-LMG2L["SearchBox_14"]["Position"] = UDim2.new(0, 4, 0, 34);
-LMG2L["SearchBox_14"]["Text"] = [[Search for Script...]];
-LMG2L["SearchBox_14"]["BackgroundTransparency"] = 0.5;
-
-
--- Players.KenDmugiwara01.PlayerGui.NarakuUI.PanelHome.SearchBox.UICorner
-LMG2L["UICorner_15"] = Instance.new("UICorner", LMG2L["SearchBox_14"]);
-
-
-
--- Players.KenDmugiwara01.PlayerGui.NarakuUI.PanelHome.SearchBox.ImageLabel
-LMG2L["ImageLabel_16"] = Instance.new("ImageLabel", LMG2L["SearchBox_14"]);
-LMG2L["ImageLabel_16"]["BorderSizePixel"] = 0;
-LMG2L["ImageLabel_16"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
--- LMG2L["ImageLabel_16"]["ImageContent"] = ;
-LMG2L["ImageLabel_16"]["Image"] = [[rbxassetid://6031154871]];
-LMG2L["ImageLabel_16"]["Size"] = UDim2.new(0, 14, 0, 14);
-LMG2L["ImageLabel_16"]["BackgroundTransparency"] = 1;
-LMG2L["ImageLabel_16"]["Position"] = UDim2.new(0, 8, 0, 4);
-
-
 -- Players.KenDmugiwara01.PlayerGui.NarakuUI.PanelHome.ScrollingFrame
 LMG2L["ScrollingFrame_17"] = Instance.new("ScrollingFrame", LMG2L["PanelHome_e"]);
 LMG2L["ScrollingFrame_17"]["BorderSizePixel"] = 0;
 LMG2L["ScrollingFrame_17"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-LMG2L["ScrollingFrame_17"]["Size"] = UDim2.new(0, 354, 0, 292);
-LMG2L["ScrollingFrame_17"]["Position"] = UDim2.new(0, 4, 0, 62);
+LMG2L["ScrollingFrame_17"]["Size"] = UDim2.new(0, 354, 0, 320);
+LMG2L["ScrollingFrame_17"]["Position"] = UDim2.new(0, 4, 0, 34);
 LMG2L["ScrollingFrame_17"]["ScrollBarThickness"] = 2;
 LMG2L["ScrollingFrame_17"]["BackgroundTransparency"] = 1;
 
