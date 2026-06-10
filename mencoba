@@ -1278,4 +1278,479 @@ task.spawn(function()
     end
 end)
 
+-- =============================================================================
+-- NARAKU EXECUTOR UI - BACKEND CONTROL SYSTEM (LocalScript)
+-- Specialist: Advanced Backend Architecture for PanelHome & PanelMain
+-- Version: 1.0 | Security Level: Production
+-- =============================================================================
+
+-- ╔══════════════════════════════════════════════════════════════════════════��╗
+-- ║ SECTION 1: CORE SERVICE INITIALIZATION & UI COMPONENT REFERENCE          ║
+-- ╚═══════════════════════════════════════════════════════════════════════════╝
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local NarakuUI = PlayerGui:WaitForChild("NarakuUI")
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PANEL HOME REFERENCES
+-- ─────────────────────────────────────────────────────────────────────────────
+local PanelHome = NarakuUI:WaitForChild("PanelHome")
+local HomeSearchBox = PanelHome:WaitForChild("SearchBox")
+local HomeScrollFrame = PanelHome:WaitForChild("ScrollingFrame")
+local HomeListLayout = HomeScrollFrame:WaitForChild("UIListLayout")
+local HomeTemplateItem = HomeScrollFrame:WaitForChild("NameTitle")
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PANEL MAIN REFERENCES
+-- ─────────────────────────────────────────────────────────────────────────────
+local PanelMain = NarakuUI:WaitForChild("PanelMain")
+local MainTitleBox = PanelMain:WaitForChild("TitleBox")
+local MainScriptBox = PanelMain:WaitForChild("ScriptBox")
+local MainAddButton = PanelMain:WaitForChild("AddScriptButton")
+local MainExecuteButton = PanelMain:WaitForChild("ExecuteButton")
+local MainCopyButton = PanelMain:WaitForChild("SalinClipboardButton")
+local MainClearButton = PanelMain:WaitForChild("ClearButton")
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 2: CLOUD SCRIPT DATABASE & CONSTANTS
+-- ═════════════════════════════════════════════════════════════════════════════
+
+local CLOUD_SCRIPTS = {
+    {Name = "TOOLBOX CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/UpdateToolbox"},
+    {Name = "ARCHIMEDES CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/Archimedes"},
+    {Name = "TERRAIN CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/terrain.lua"},
+    {Name = "FLY CLOUD", Url = "https://pastefy.app/ofUG7Jsv/raw"}
+}
+
+local FOLDER_DELTA = "delta"
+local CLOUD_SCRIPT_COLOR = Color3.fromRGB(210, 245, 255)
+local SCRIPT_EXTENSION = ".lua"
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PLACEHOLDER TEXTS
+-- ─────────────────────────────────────────────────────────────────────────────
+local PLACEHOLDER_TITLE = "Enter Title..."
+local PLACEHOLDER_SCRIPT = "-- Enter Your Script..."
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 3: INITIAL SETUP & FOLDER CREATION
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- Fungsi: Inisialisasi Folder DELTA
+local function initializeDeltaFolder()
+    if not isfolder(FOLDER_DELTA) then
+        local success = pcall(function()
+            makefolder(FOLDER_DELTA)
+        end)
+        if success then
+            print("[NARAKU] Folder 'delta' berhasil dibuat.")
+        else
+            warn("[NARAKU] Gagal membuat folder 'delta'. Filesystem mungkin tidak tersedia.")
+        end
+    end
+end
+
+-- Jalankan Inisialisasi
+initializeDeltaFolder()
+
+-- Konfigurasi Template Item Default
+if HomeTemplateItem then
+    HomeTemplateItem.Visible = false
+end
+
+-- Konfigurasi UIListLayout
+if HomeListLayout then
+    HomeListLayout.Padding = UDim.new(0, 3)
+    HomeListLayout.FillDirection = Enum.FillDirection.Vertical
+end
+
+-- Konfigurasi ScriptBox MultiLine
+if MainScriptBox then
+    MainScriptBox.TextWrapped = true
+    MainScriptBox.ClearTextOnFocus = false
+    MainScriptBox.MultiLine = true
+    MainScriptBox.ClipsDescendants = true
+end
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 4: UTILITY FUNCTIONS
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- Fungsi: Fetch Script dari Cloud dengan HTTP Get Protection
+local function fetchCloudScript(url)
+    local success, content = pcall(function()
+        return game:HttpGet(url)
+    end)
+    
+    if success and content and content ~= "" then
+        return content
+    else
+        warn("[NARAKU] Gagal fetch script dari URL: " .. url)
+        return nil
+    end
+end
+
+-- Fungsi: Eksekusi Script dengan Error Handling
+local function executeScript(source)
+    if not source or source == "" then
+        warn("[NARAKU] Source code kosong.")
+        return false
+    end
+    
+    local loadSuccess, loadedFunc = pcall(function()
+        return loadstring(source)
+    end)
+    
+    if not loadSuccess then
+        warn("[NARAKU] Syntax Error pada script: " .. tostring(loadedFunc))
+        return false
+    end
+    
+    if loadedFunc then
+        local execSuccess, execError = pcall(function()
+            loadedFunc()
+        end)
+        
+        if not execSuccess then
+            warn("[NARAKU] Runtime Error saat eksekusi: " .. tostring(execError))
+            return false
+        end
+        
+        print("[NARAKU] Script berhasil dieksekusi.")
+        return true
+    end
+    
+    return false
+end
+
+-- Fungsi: Trim Whitespace dari String
+local function trimString(str)
+    return str:gsub("^%s*(.-)%s*$", "%1")
+end
+
+-- Fungsi: Sanitize Filename
+local function sanitizeFilename(name)
+    return name:gsub("[<>:\"/\\|?*]", ""):gsub("^%s+|%s+$", "")
+end
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 5: PANEL HOME SCRIPT MANAGEMENT
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- Fungsi: Clear Semua Item (Kecuali Template & UIListLayout)
+local function clearHomeList()
+    for _, child in ipairs(HomeScrollFrame:GetChildren()) do
+        if child ~= HomeTemplateItem and child ~= HomeListLayout then
+            child:Destroy()
+        end
+    end
+end
+
+-- Fungsi: Render Cloud Scripts
+local function renderCloudScripts()
+    for _, cloudData in ipairs(CLOUD_SCRIPTS) do
+        local cloudClone = HomeTemplateItem:Clone()
+        cloudClone.Name = cloudData.Name
+        cloudClone.Text = cloudData.Name
+        cloudClone.TextColor3 = CLOUD_SCRIPT_COLOR
+        cloudClone.Visible = true
+        cloudClone.Parent = HomeScrollFrame
+        
+        -- Cari dan setup ExecuteButton
+        local execBtn = cloudClone:FindFirstChild("ExecuteButton")
+        if execBtn then
+            execBtn.MouseButton1Click:Connect(function()
+                task.spawn(function()
+                    print("[NARAKU] Mengunduh script cloud: " .. cloudData.Name)
+                    local scriptContent = fetchCloudScript(cloudData.Url)
+                    if scriptContent then
+                        executeScript(scriptContent)
+                    end
+                end)
+            end)
+        end
+        
+        -- Sembunyikan DeleteButton untuk Cloud Scripts (Proteksi)
+        local delBtn = cloudClone:FindFirstChild("DeleteButton")
+        if delBtn then
+            delBtn.Visible = false
+        end
+    end
+    
+    print("[NARAKU] Cloud scripts berhasil di-render (" .. #CLOUD_SCRIPTS .. " script).")
+end
+
+-- Fungsi: Render Local Scripts dari Folder DELTA
+local function renderLocalScripts()
+    if not isfolder(FOLDER_DELTA) then
+        warn("[NARAKU] Folder 'delta' tidak ditemukan.")
+        return
+    end
+    
+    local successRead, fileList = pcall(function()
+        return listfiles(FOLDER_DELTA)
+    end)
+    
+    if not successRead or not fileList then
+        warn("[NARAKU] Gagal membaca folder 'delta'.")
+        return
+    end
+    
+    for _, filePath in ipairs(fileList) do
+        local fileName = filePath:match("([^/\\]+)$") or filePath
+        local lowerName = fileName:lower()
+        
+        -- Filter hanya file .lua
+        if lowerName:sub(-4) == ".lua" then
+            local cleanTitle = fileName:gsub("%.lua$", "")
+            
+            local localClone = HomeTemplateItem:Clone()
+            localClone.Name = cleanTitle
+            localClone.Text = cleanTitle
+            localClone.Visible = true
+            localClone.Parent = HomeScrollFrame
+            
+            -- Setup ExecuteButton
+            local execBtn = localClone:FindFirstChild("ExecuteButton")
+            if execBtn then
+                execBtn.MouseButton1Click:Connect(function()
+                    task.spawn(function()
+                        print("[NARAKU] Mengeksekusi script lokal: " .. cleanTitle)
+                        local successRead, fileContent = pcall(function()
+                            return readfile(filePath)
+                        end)
+                        
+                        if successRead and fileContent and fileContent ~= "" then
+                            executeScript(fileContent)
+                        else
+                            warn("[NARAKU] Gagal membaca file: " .. filePath)
+                        end
+                    end)
+                end)
+            end
+            
+            -- Setup DeleteButton
+            local delBtn = localClone:FindFirstChild("DeleteButton")
+            if delBtn then
+                delBtn.MouseButton1Click:Connect(function()
+                    task.spawn(function()
+                        local successDel = pcall(function()
+                            delfile(filePath)
+                        end)
+                        
+                        if successDel then
+                            print("[NARAKU] Script '" .. cleanTitle .. "' berhasil dihapus.")
+                            localClone:Destroy()
+                            refreshScriptList()
+                        else
+                            warn("[NARAKU] Gagal menghapus file: " .. filePath)
+                        end
+                    end)
+                end)
+            end
+        end
+    end
+    
+    print("[NARAKU] Local scripts berhasil di-render (" .. #fileList .. " file ditemukan).")
+end
+
+-- Fungsi: Refresh Total Script List (Cloud + Local)
+function refreshScriptList()
+    clearHomeList()
+    renderCloudScripts()
+    renderLocalScripts()
+    print("[NARAKU] Script list telah di-refresh.")
+end
+
+-- Jalankan Initial Render
+refreshScriptList()
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 6: REAL-TIME SEARCH ENGINE (PANEL HOME)
+-- ═════════════════════════════════════════════════════════════════════════════
+
+HomeSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local searchQuery = string.lower(trimString(HomeSearchBox.Text))
+    
+    for _, child in ipairs(HomeScrollFrame:GetChildren()) do
+        -- Skip template dan UIListLayout
+        if child == HomeTemplateItem or child == HomeListLayout then
+            continue
+        end
+        
+        local itemName = string.lower(child.Text or child.Name or "")
+        
+        -- Fuzzy matching: cek apakah searchQuery ada dalam itemName
+        if searchQuery == "" or string.find(itemName, searchQuery, 1, true) then
+            child.Visible = true
+        else
+            child.Visible = false
+        end
+    end
+    
+    print("[NARAKU] Search query: '" .. searchQuery .. "'")
+end)
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 7: PANEL MAIN SCRIPT EDITOR & EXECUTOR
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ADD SCRIPT BUTTON (Save & Store to DELTA Folder)
+-- ─────────────────────────────────────────────────────────────────────────────
+MainAddButton.MouseButton1Click:Connect(function()
+    task.spawn(function()
+        local titleText = trimString(MainTitleBox.Text)
+        local scriptText = trimString(MainScriptBox.Text)
+        
+        -- Validasi Input
+        if titleText == "" or titleText == PLACEHOLDER_TITLE then
+            warn("[NARAKU] Nama script tidak boleh kosong.")
+            return
+        end
+        
+        if scriptText == "" or scriptText == PLACEHOLDER_SCRIPT then
+            warn("[NARAKU] Script tidak boleh kosong.")
+            return
+        end
+        
+        -- Sanitize Filename
+        local sanitizedTitle = sanitizeFilename(titleText)
+        if sanitizedTitle == "" then
+            warn("[NARAKU] Nama script tidak valid setelah sanitasi.")
+            return
+        end
+        
+        -- Write File to DELTA Folder
+        local filePath = FOLDER_DELTA .. "/" .. sanitizedTitle .. SCRIPT_EXTENSION
+        local writeSuccess = pcall(function()
+            writefile(filePath, scriptText)
+        end)
+        
+        if writeSuccess then
+            print("[NARAKU] Script '" .. sanitizedTitle .. "' berhasil disimpan ke: " .. filePath)
+            
+            -- Reset Input Fields
+            MainTitleBox.Text = PLACEHOLDER_TITLE
+            MainScriptBox.Text = PLACEHOLDER_SCRIPT
+            
+            -- Refresh List untuk menampilkan script baru
+            refreshScriptList()
+        else
+            warn("[NARAKU] Gagal menyimpan script ke: " .. filePath)
+        end
+    end)
+end)
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- EXECUTE BUTTON (Run Script dari ScriptBox)
+-- ─────────────────────────────────────────────────────────────────────────────
+MainExecuteButton.MouseButton1Click:Connect(function()
+    task.spawn(function()
+        local sourceCode = MainScriptBox.Text
+        
+        if sourceCode == "" or sourceCode == PLACEHOLDER_SCRIPT then
+            warn("[NARAKU] Tidak ada script untuk dieksekusi.")
+            return
+        end
+        
+        print("[NARAKU] Menjalankan script dari editor...")
+        executeScript(sourceCode)
+    end)
+end)
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- COPY TO CLIPBOARD BUTTON
+-- ─────────────────────────────────────────────────────────────────────────────
+MainCopyButton.MouseButton1Click:Connect(function()
+    task.spawn(function()
+        local sourceCode = MainScriptBox.Text
+        
+        if sourceCode == "" or sourceCode == PLACEHOLDER_SCRIPT then
+            warn("[NARAKU] Tidak ada script untuk disalin.")
+            return
+        end
+        
+        -- Coba gunakan setclipboard (Priority 1)
+        local clipboardSuccess = false
+        
+        if setclipboard then
+            clipboardSuccess = pcall(function()
+                setclipboard(sourceCode)
+            end)
+        elseif toclipboard then
+            -- Fallback ke toclipboard jika setclipboard tidak tersedia
+            clipboardSuccess = pcall(function()
+                toclipboard(sourceCode)
+            end)
+        else
+            warn("[NARAKU] Clipboard API tidak tersedia di executor ini.")
+            return
+        end
+        
+        if clipboardSuccess then
+            print("[NARAKU] Script berhasil disalin ke clipboard.")
+        else
+            warn("[NARAKU] Gagal menyalin script ke clipboard.")
+        end
+    end)
+end)
+
+-- ──────────────────────────────────────��──────────────────────────────────────
+-- CLEAR BUTTON (Clear ScriptBox)
+-- ─────────────────────────────────────────────────────────────────────────────
+MainClearButton.MouseButton1Click:Connect(function()
+    MainScriptBox.Text = ""
+    print("[NARAKU] Editor script telah dikosongkan.")
+end)
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 8: PLACEHOLDER TEXT MANAGEMENT
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- Fungsi: Manage Placeholder Text pada Focus/Blur
+local function setupPlaceholderBehavior(textBox, placeholderText)
+    textBox.Focused:Connect(function()
+        if textBox.Text == placeholderText then
+            textBox.Text = ""
+        end
+    end)
+    
+    textBox.FocusLost:Connect(function()
+        if textBox.Text == "" then
+            textBox.Text = placeholderText
+        end
+    end)
+end
+
+setupPlaceholderBehavior(MainTitleBox, PLACEHOLDER_TITLE)
+setupPlaceholderBehavior(MainScriptBox, PLACEHOLDER_SCRIPT)
+setupPlaceholderBehavior(HomeSearchBox, "Search scripts...")
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 9: DEBUG & STATUS MONITORING
+-- ═════════════════════════════════════════════════════════════════════════════
+
+print("[NARAKU] ✓ Backend UI Control System Initialized Successfully")
+print("[NARAKU] ✓ PanelHome & PanelMain Linked & Ready")
+print("[NARAKU] ✓ Cloud Scripts: " .. #CLOUD_SCRIPTS .. " entries loaded")
+print("[NARAKU] ✓ Delta Folder: " .. (isfolder(FOLDER_DELTA) and "✓ Active" or "✗ Inactive"))
+print("[NARAKU] ════════════════════════════════════════════════════════")
+
+-- Optional: Auto-refresh script list setiap 5 detik untuk sinkronisasi file system
+-- local refreshInterval = 5
+-- while true do
+--     wait(refreshInterval)
+--     refreshScriptList()
+-- end
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- END OF NARAKU EXECUTOR UI BACKEND SYSTEM
+-- =============================================================================
+
 return LMG2L["NarakuUI_1"], require;
