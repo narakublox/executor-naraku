@@ -1250,4 +1250,410 @@ task.spawn(function()
     end
 end)
 
+-- ============================================================================
+-- NARAKU BLOX EXECUTOR - COMPLETE BACKEND LOCALSCRIP SYSTEM
+-- Advanced Implementation: Cloud Scripts + Filesystem + Panel Management
+-- ============================================================================
+
+-- ============================================================================
+-- SEKTOR 1: SERVICES & CORE REFERENCES
+-- ============================================================================
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local ScreenGui = PlayerGui:WaitForChild("NarakuUI")
+local TweenService = game:GetService("TweenService")
+
+-- ============================================================================
+-- SEKTOR 2: UI COMPONENT REFERENCES
+-- ============================================================================
+local PanelHome = ScreenGui:WaitForChild("PanelHome")
+local PanelMain = ScreenGui:WaitForChild("PanelMain")
+
+-- PanelHome Components
+local HomeScrollingFrame = PanelHome:WaitForChild("ScrollingFrame")
+local NameTitle_Template = HomeScrollingFrame:WaitForChild("NameTitle")
+local UIListLayout_Home = HomeScrollingFrame:WaitForChild("UIListLayout")
+
+-- PanelMain Components
+local TitleBox = PanelMain:WaitForChild("TitleBox")
+local AddScriptButton = PanelMain:WaitForChild("AddScriptButton")
+local ExecuteButton_Main = PanelMain:WaitForChild("ExecuteButton")
+local SalinClipboardButton = PanelMain:WaitForChild("SalinClipboardButton")
+local ClearButton = PanelMain:WaitForChild("ClearButton")
+
+-- Find ScriptBox and MainScrollingFrame
+local MainScrollingFrame = nil
+local ScriptBox = nil
+
+for _, child in ipairs(PanelMain:GetDescendants()) do
+    if child:IsA("ScrollingFrame") and child.Name == "ScrollingFrame" then
+        MainScrollingFrame = child
+    end
+    if child:IsA("TextBox") and child.Name == "ScriptBox" then
+        ScriptBox = child
+    end
+end
+
+-- Ensure ScriptBox exists
+if not ScriptBox and MainScrollingFrame then
+    ScriptBox = MainScrollingFrame:WaitForChild("ScriptBox")
+end
+
+-- ============================================================================
+-- SEKTOR 3: CLOUD SCRIPTS DATABASE
+-- ============================================================================
+local cloudScripts = {
+    {Name = "TOOLBOX CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/UpdateToolbox"},
+    {Name = "ARCHIMEDES CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/Archimedes"},
+    {Name = "TERRAIN CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/terrain.lua"},
+    {Name = "FLY CLOUD", Url = "https://pastefy.app/ofUG7Jsv/raw"}
+}
+
+-- ============================================================================
+-- SEKTOR 4: STATE MANAGEMENT & TRACKING
+-- ============================================================================
+local cloudScriptClones = {} -- Tracks cloud script clones
+local localScriptClones = {} -- Tracks local script clones
+local activeCloudScripts = {} -- Stores cloud script instances
+
+-- Set template to invisible by default
+NameTitle_Template.Visible = false
+
+-- ============================================================================
+-- SEKTOR 5: FILESYSTEM MANAGEMENT
+-- ============================================================================
+
+-- Initialize delta folder if not exists
+local function initializeDeltaFolder()
+    if not isfolder("delta") then
+        pcall(function()
+            makefolder("delta")
+        end)
+    end
+end
+
+-- Get list of local script files from delta folder
+local function getLocalScriptFiles()
+    local files = {}
+    local success, fileList = pcall(function()
+        return listfiles("delta")
+    end)
+    
+    if success and fileList then
+        for _, filePath in ipairs(fileList) do
+            if filePath:match("%.lua$") then
+                table.insert(files, filePath)
+            end
+        end
+    end
+    
+    return files
+end
+
+-- Extract filename without path and extension
+local function extractFileName(filePath)
+    local fileName = filePath:match("([^/\\]+)$") or filePath
+    fileName = fileName:gsub("%.lua$", "")
+    return fileName
+end
+
+-- ============================================================================
+-- SEKTOR 6: HTTP REQUEST HANDLER (WITH ERROR PROTECTION)
+-- ============================================================================
+
+local function fetchCloudScript(url)
+    local success, response = pcall(function()
+        return game:HttpGet(url, true)
+    end)
+    
+    if success and response then
+        return response
+    else
+        warn("[NARAKU] Failed to fetch cloud script from: " .. tostring(url))
+        return nil
+    end
+end
+
+-- ============================================================================
+-- SEKTOR 7: CLOUD SCRIPTS RENDERER
+-- ============================================================================
+
+local function renderCloudScripts()
+    for _, cloudData in ipairs(cloudScripts) do
+        -- Clone template
+        local clone = NameTitle_Template:Clone()
+        clone.Name = "CloudScript_" .. cloudData.Name:gsub(" ", "_")
+        clone.Text = "    " .. cloudData.Name
+        clone.Visible = true
+        
+        -- Hide delete button for cloud scripts (protection)
+        local deleteBtn = clone:FindFirstChild("DeleteButton")
+        if deleteBtn then
+            deleteBtn.Visible = false
+        end
+        
+        -- Setup execute button for cloud script
+        local executeBtn = clone:FindFirstChild("ExecuteButton")
+        if executeBtn then
+            executeBtn.MouseButton1Click:Connect(function()
+                task.spawn(function()
+                    local scriptSource = fetchCloudScript(cloudData.Url)
+                    
+                    if scriptSource then
+                        local execSuccess, execError = pcall(function()
+                            loadstring(scriptSource)()
+                        end)
+                        
+                        if not execSuccess then
+                            warn("[NARAKU] Cloud script execution error ('" .. cloudData.Name .. "'): " .. tostring(execError))
+                        else
+                            print("[NARAKU] Cloud script executed successfully: " .. cloudData.Name)
+                        end
+                    end
+                end)
+            end)
+        end
+        
+        -- Add to parent and track
+        clone.Parent = HomeScrollingFrame
+        table.insert(cloudScriptClones, clone)
+        table.insert(activeCloudScripts, cloudData.Name)
+    end
+end
+
+-- ============================================================================
+-- SEKTOR 8: LOCAL SCRIPTS REFRESH SYSTEM
+-- ============================================================================
+
+local function refreshLocalScripts()
+    -- Remove old local script clones (preserve template, UIListLayout, and cloud scripts)
+    for _, child in ipairs(HomeScrollingFrame:GetChildren()) do
+        -- Skip preserved items
+        if child == NameTitle_Template or child == UIListLayout_Home then
+            continue
+        end
+        
+        -- Skip cloud scripts
+        if child.Name:match("^CloudScript_") then
+            continue
+        end
+        
+        -- Remove local script clone
+        if localScriptClones[child] then
+            localScriptClones[child] = nil
+        end
+        
+        pcall(function()
+            child:Destroy()
+        end)
+    end
+    
+    localScriptClones = {}
+    
+    -- Read files from delta folder
+    local files = getLocalScriptFiles()
+    
+    for _, filePath in ipairs(files) do
+        local displayName = extractFileName(filePath)
+        
+        -- Clone template for local script
+        local clone = NameTitle_Template:Clone()
+        clone.Name = "LocalScript_" .. displayName:gsub(" ", "_")
+        clone.Text = "    " .. displayName
+        clone.Visible = true
+        
+        -- Setup execute button for local script
+        local executeBtn = clone:FindFirstChild("ExecuteButton")
+        if executeBtn then
+            executeBtn.Visible = true
+            executeBtn.MouseButton1Click:Connect(function()
+                task.spawn(function()
+                    local readSuccess, scriptContent = pcall(function()
+                        return readfile(filePath)
+                    end)
+                    
+                    if readSuccess and scriptContent then
+                        local execSuccess, execError = pcall(function()
+                            loadstring(scriptContent)()
+                        end)
+                        
+                        if not execSuccess then
+                            warn("[NARAKU] Local script execution error ('" .. displayName .. "'): " .. tostring(execError))
+                        else
+                            print("[NARAKU] Local script executed successfully: " .. displayName)
+                        end
+                    else
+                        warn("[NARAKU] Failed to read local script file: " .. filePath)
+                    end
+                end)
+            end)
+        end
+        
+        -- Setup delete button for local script
+        local deleteBtn = clone:FindFirstChild("DeleteButton")
+        if deleteBtn then
+            deleteBtn.Visible = true
+            deleteBtn.MouseButton1Click:Connect(function()
+                task.spawn(function()
+                    local delSuccess = pcall(function()
+                        delfile(filePath)
+                    end)
+                    
+                    if delSuccess then
+                        print("[NARAKU] Local script deleted: " .. displayName)
+                        refreshLocalScripts() -- Refresh UI after deletion
+                    else
+                        warn("[NARAKU] Failed to delete local script: " .. filePath)
+                    end
+                end)
+            end)
+        end
+        
+        -- Add to parent and track
+        clone.Parent = HomeScrollingFrame
+        localScriptClones[clone] = filePath
+    end
+end
+
+-- ============================================================================
+-- SEKTOR 9: PANEL MAIN (EDITOR) FUNCTIONALITY
+-- ============================================================================
+
+-- AddScriptButton: Save new script to delta folder
+if AddScriptButton then
+    AddScriptButton.MouseButton1Click:Connect(function()
+        task.spawn(function()
+            local titleText = TitleBox.Text:match("^%s*(.-)%s*$") or ""
+            local scriptText = ScriptBox.Text or ""
+            
+            -- Validate title
+            if titleText == "" or titleText == "Enter Your Title..." or titleText:match("^%s*$") then
+                warn("[NARAKU] Invalid title. Script not saved.")
+                return
+            end
+            
+            -- Sanitize filename
+            local safeTitle = titleText:gsub("[/<>:\"|?*\\]", "_"):gsub("%s+", "_")
+            local filePath = "delta/" .. safeTitle .. ".lua"
+            
+            -- Save to file
+            local saveSuccess = pcall(function()
+                writefile(filePath, scriptText)
+            end)
+            
+            if saveSuccess then
+                print("[NARAKU] Script saved successfully: " .. safeTitle)
+                
+                -- Clear title box
+                TitleBox.Text = ""
+                
+                -- Refresh local scripts list
+                refreshLocalScripts()
+            else
+                warn("[NARAKU] Failed to save script to file")
+            end
+        end)
+    end)
+end
+
+-- ExecuteButton (Main Panel): Execute script from editor
+if ExecuteButton_Main then
+    ExecuteButton_Main.MouseButton1Click:Connect(function()
+        task.spawn(function()
+            local scriptText = ScriptBox.Text or ""
+            
+            if scriptText:match("^%s*$") then
+                warn("[NARAKU] Script box is empty")
+                return
+            end
+            
+            local execSuccess, execError = pcall(function()
+                loadstring(scriptText)()
+            end)
+            
+            if not execSuccess then
+                warn("[NARAKU] Script execution error: " .. tostring(execError))
+            else
+                print("[NARAKU] Script executed successfully from editor")
+            end
+        end)
+    end)
+end
+
+-- SalinClipboardButton: Copy script to clipboard
+if SalinClipboardButton then
+    SalinClipboardButton.MouseButton1Click:Connect(function()
+        task.spawn(function()
+            local scriptText = ScriptBox.Text or ""
+            
+            if scriptText:match("^%s*$") then
+                warn("[NARAKU] Script box is empty")
+                return
+            end
+            
+            local clipboardSuccess = pcall(function()
+                if setclipboard then
+                    setclipboard(scriptText)
+                elseif toclipboard then
+                    toclipboard(scriptText)
+                else
+                    error("Clipboard function not available")
+                end
+            end)
+            
+            if clipboardSuccess then
+                print("[NARAKU] Script copied to clipboard")
+            else
+                warn("[NARAKU] Failed to copy to clipboard")
+            end
+        end)
+    end)
+end
+
+-- ClearButton: Clear script editor
+if ClearButton then
+    ClearButton.MouseButton1Click:Connect(function()
+        ScriptBox.Text = ""
+        print("[NARAKU] Script editor cleared")
+    end)
+end
+
+-- ============================================================================
+-- SEKTOR 10: INITIALIZATION SEQUENCE
+-- ============================================================================
+
+local function initialize()
+    -- Initialize delta folder
+    initializeDeltaFolder()
+    
+    -- Render cloud scripts (one-time on startup)
+    renderCloudScripts()
+    
+    -- Render local scripts from delta folder
+    refreshLocalScripts()
+    
+    print("[NARAKU] Backend system initialized successfully!")
+    print("[NARAKU] Cloud Scripts: " .. #cloudScriptClones)
+    print("[NARAKU] Local Scripts: " .. #localScriptClones)
+end
+
+-- Start initialization
+initialize()
+
+-- ============================================================================
+-- SEKTOR 11: AUTO-REFRESH POLLING (OPTIONAL - UNCOMMENT TO USE)
+-- ============================================================================
+-- Uncomment below to enable auto-refresh every 5 seconds
+--[[
+task.spawn(function()
+    while true do
+        wait(5)
+        refreshLocalScripts()
+    end
+end)
+]]
+
+print("[NARAKU] Backend LocalScript loaded completely!")
+
 return LMG2L["NarakuUI_1"], require;
