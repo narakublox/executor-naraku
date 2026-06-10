@@ -1278,4 +1278,263 @@ task.spawn(function()
     end
 end)
 
+-- =============================================================================
+-- PILAR H: ARCHITECTURE ENGINE - PANEL HOME & PANEL MAIN LOGIC SYSTEM (FULL FIXED)
+-- =============================================================================
+-- Referensi Objek Berdasarkan Data LMG2L UI Dokumen Resmi
+local ScreenGui = LMG2L["NarakuUI_1"]
+local PanelHome = LMG2L["PanelHome_e"]
+local PanelMain = LMG2L["PanelMain_21"]
+
+-- Komponen Utama Panel Home
+local SearchBox = PanelHome:WaitForChild("SearchBox")
+local ScrollingHome = PanelHome:WaitForChild("ScrollingFrame")
+local SampleTemplate = ScrollingHome:WaitForChild("NameTitle") -- Template clone dasar
+
+-- Komponen Utama Panel Main
+local TitleBox = PanelMain:WaitForChild("TitleBox")
+local ScriptBox = PanelMain:WaitForChild("ScrollingFrame"):WaitForChild("ScriptBox")
+local AddScriptBtn = PanelMain:WaitForChild("AddScriptButton")
+local ExecuteMainBtn = PanelMain:WaitForChild("ExecuteButton")
+local SalinClipboardBtn = PanelMain:WaitForChild("SalinClipboardButton")
+local ClearBtn = PanelMain:WaitForChild("ClearButton")
+
+-- Sembunyikan template asli dari layout agar tidak mengganggu list visual
+SampleTemplate.Visible = false
+
+-- 4 SCRIPT UTAMA KATEGORI CLOUD (PERMANEN / ANTI-DELETE)
+local CloudScripts = {
+    {Name = "TOOLBOX CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/UpdateToolbox"},
+    {Name = "ARCHIMEDES CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/Archimedes"},
+    {Name = "TERRAIN CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/terrain.lua"},
+    {Name = "FLY CLOUD", Url = "https://pastefy.app/ofUG7Jsv/raw"}
+}
+
+-- Integrasi Folder Penyimpanan Delta Executor
+local FOLDER_NAME = "delta"
+if not isfolder(FOLDER_NAME) then
+    makefolder(FOLDER_NAME)
+end
+
+-- =============================================================================
+-- ADVANCED SYSTEM: BYPASS ENGINE ENVIRONMENT (LOADSTRING & REQUIRE OVERRIDE)
+-- =============================================================================
+local function getBypassedEnvironment()
+    local bypassedEnv = setmetatable({}, {__index = getfenv(0)})
+    
+    -- Bypass loadstring agar mampu membaca string mentah secara bebas tanpa restriksi sandbox
+    bypassedEnv.loadstring = function(source, chunkname)
+        local success, result = pcall(loadstring, source, chunkname or "=NarakuCoreEngine")
+        if success then 
+            return result 
+        else 
+            return nil, result 
+        end
+    end
+    
+    -- Bypass require untuk memotong pembatasan pemuatan ModuleScript eksternal
+    bypassedEnv.require = function(moduleScript)
+        if typeof(moduleScript) == "Instance" and moduleScript:IsA("ModuleScript") then
+            local success, res = pcall(require, moduleScript)
+            if success then return res end
+        end
+        return require(moduleScript)
+    end
+    
+    return bypassedEnv
+end
+
+-- Safely Execute String Codes menggunakan Sandbox Environment hasil bypass
+local function executeCode(codeSource)
+    if codeSource and codeSource ~= "" and codeSource ~= "print('Hello World')" and codeSource ~= "Print('Hello World')" then
+        local success, err = pcall(function()
+            local func = loadstring(codeSource)
+            if func then 
+                setfenv(func, getBypassedEnvironment())
+                task.spawn(func) 
+            else 
+                error("Gagal memuat struktur kompilasi loadstring bawaan.") 
+            end
+        end)
+        if not success then
+            warn("[NARAKU ERROR]: " .. tostring(err))
+        end
+    end
+end
+
+-- Safely Fetch URL Source Data
+local function fetchUrl(url)
+    local success, content = pcall(function()
+        return game:HttpGet(url)
+    end)
+    return success and content or nil
+end
+
+-- =============================================================================
+-- SYSTEM UTAMA 1: REFRESH & RENDER LIST SCRIPT (PANEL HOME)
+-- =============================================================================
+local function refreshHomeList(searchFilter)
+    -- Bersihkan semua item lama di dalam ScrollingFrame kecuali template asli dan UIListLayout
+    for _, item in ipairs(ScrollingHome:GetChildren()) do
+        if item ~= SampleTemplate and not item:IsA("UIListLayout") and not item:IsA("UIPadding") then
+            item:Destroy()
+        end
+    end
+
+    searchFilter = searchFilter and searchFilter:lower() or ""
+
+    -- 1. Render 4 Script Cloud (Permanen & Tombol Delete Otomatis Hilang)
+    for _, cloudData in ipairs(CloudScripts) do
+        if searchFilter == "" or cloudData.Name:lower():find(searchFilter) then
+            local clone = SampleTemplate:Clone()
+            clone.Text = "    " .. cloudData.Name
+            clone.Name = "Cloud_" .. cloudData.Name
+            clone.Visible = true
+            
+            -- Hilangkan tombol Delete khusus untuk item Cloud Script
+            if clone:FindFirstChild("DeleteButton") then
+                clone.DeleteButton.Visible = false
+            end
+
+            -- Integrasi Fungsi Execute Cloud
+            clone.ExecuteButton.MouseButton1Click:Connect(function()
+                local rawCode = fetchUrl(cloudData.Url)
+                if rawCode then
+                    executeCode(rawCode)
+                else
+                    warn("[NARAKU CLOUD]: Gagal mengunduh script dari source URL.")
+                end
+            end)
+            clone.Parent = ScrollingHome
+        end
+    end
+
+    -- 2. Render Script Lokal yang Tersimpan di Folder Delta (Bisa Dihapus)
+    local success, files = pcall(function() return listfiles(FOLDER_NAME) end)
+    if success then
+        for _, filePath in ipairs(files) do
+            local fileName = filePath:match("([^/\\]+)$")
+            local scriptTitle = fileName:gsub("%.txt$", ""):gsub("%.lua$", "")
+
+            if searchFilter == "" or scriptTitle:lower():find(searchFilter) then
+                local clone = SampleTemplate:Clone()
+                clone.Text = "    " .. scriptTitle:upper()
+                clone.Name = "Local_" .. scriptTitle
+                clone.Visible = true
+
+                -- Integrasi Fungsi Execute Lokal
+                clone.ExecuteButton.MouseButton1Click:Connect(function()
+                    local successRead, codeContent = pcall(function() return readfile(filePath) end)
+                    if successRead then
+                        executeCode(codeContent)
+                    end
+                end)
+
+                -- Integrasi Fungsi Delete Lokal
+                clone.DeleteButton.MouseButton1Click:Connect(function()
+                    pcall(function() delfile(filePath) end)
+                    local currentSearch = (SearchBox.Text ~= "Search for Script..." and SearchBox.Text ~= "") and SearchBox.Text or ""
+                    refreshHomeList(currentSearch)
+                end)
+
+                clone.Parent = ScrollingHome
+            end
+        end
+    end
+end
+
+-- =============================================================================
+-- SYSTEM UTAMA 2: INTERAKSI & SISTEM AUTO-RESTORE PLACEHOLDER TEXTBOX
+-- =============================================================================
+local function setupSmartPlaceholder(textBox, placeholderText)
+    textBox.Focused:Connect(function()
+        if textBox.Text:lower() == placeholderText:lower() then
+            textBox.Text = ""
+        end
+    end)
+
+    textBox.FocusLost:Connect(function()
+        if textBox.Text:gsub("^%s*(.-)%s*$", "%1") == "" then
+            textBox.Text = placeholderText
+            if textBox == SearchBox then
+                refreshHomeList("")
+            end
+        end
+    end)
+end
+
+-- Terapkan sistem auto-clear dan auto-restore ke seluruh komponen TextBox
+setupSmartPlaceholder(SearchBox, "Search for Script...")
+setupSmartPlaceholder(TitleBox, "Enter Your Title...")
+setupSmartPlaceholder(ScriptBox, "print('Hello World')")
+
+-- Sistem Filter Pencarian Dinamis Saat Mengetik
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    if SearchBox.Text ~= "Search for Script..." then
+        refreshHomeList(SearchBox.Text)
+    end
+end)
+
+-- =============================================================================
+-- SYSTEM UTAMA 3: LOGIKA ACTIONS UTAMA BUTTON (PANEL MAIN)
+-- =============================================================================
+
+-- Fungsi Add Script: Simpan Kode ke Direktori Delta Folder
+AddScriptBtn.MouseButton1Click:Connect(function()
+    local title = TitleBox.Text:gsub("^%s*(.-)%s*$", "%1") -- Pembersihan spasi kosong
+    local code = ScriptBox.Text
+
+    if title == "" or title:lower() == "enter your title..." then
+        warn("[NARAKU WARNING]: Mohon berikan nama/title script terlebih dahulu.")
+        return
+    end
+    
+    -- Jika isi code kosong atau masih berupa placeholder, cegah penyimpanan berkas kosong
+    if code:lower() == "print('hello world')" or code:gsub("^%s*(.-)%s*$", "%1") == "" then
+        warn("[NARAKU WARNING]: Tidak dapat menyimpan script kosong atau default placeholder.")
+        return
+    end
+
+    local secureFileName = FOLDER_NAME .. "/" .. title .. ".lua"
+    local successWrite, err = pcall(function()
+        writefile(secureFileName, code)
+    end)
+
+    if successWrite then
+        TitleBox.Text = "Enter Your Title..." -- Kembalikan ke text placeholder semula
+        local currentSearch = (SearchBox.Text ~= "Search for Script..." and SearchBox.Text ~= "") and SearchBox.Text or ""
+        refreshHomeList(currentSearch)
+    else
+        warn("[NARAKU ERROR]: Gagal menyimpan berkas lokal, detail: " .. tostring(err))
+    end
+end)
+
+-- Fungsi Eksekusi Langsung dari Editor ScriptBox Panel Main
+ExecuteMainBtn.MouseButton1Click:Connect(function()
+    executeCode(ScriptBox.Text)
+end)
+
+-- Fungsi Salin Kode ScriptBox ke Clipboard Sistem
+SalinClipboardBtn.MouseButton1Click:Connect(function()
+    local textToCopy = ScriptBox.Text
+    if textToCopy ~= "print('Hello World')" and textToCopy ~= "" then
+        if setclipboard or toclipboard then
+            local setClip = setclipboard or toclipboard
+            setClip(textToCopy)
+        else
+            warn("[NARAKU WARNING]: Executor Anda tidak mendukung fungsi API setclipboard.")
+        end
+    end
+end)
+
+-- Fungsi Clear: Kosongkan Editor dan Otomatis Memunculkan Kembali Teks Placeholder
+ClearBtn.MouseButton1Click:Connect(function()
+    ScriptBox.Text = "print('Hello World')"
+end)
+
+-- =============================================================================
+-- INITIALIZATION RENDER DAFTAR PERTAMA KALI
+-- =============================================================================
+refreshHomeList("")
+
 return LMG2L["NarakuUI_1"], require;
