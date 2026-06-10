@@ -1279,7 +1279,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- PILAR H: ARCHITECTURE ENGINE - PANEL HOME & PANEL MAIN LOGIC SYSTEM (RE-FIXED)
+-- PILAR H: ARCHITECTURE ENGINE - PANEL HOME & PANEL MAIN LOGIC SYSTEM (100% FIXED)
 -- =============================================================================
 -- Referensi Objek Berdasarkan Data LMG2L UI Dokumen Resmi
 local ScreenGui = LMG2L["NarakuUI_1"]
@@ -1315,6 +1315,9 @@ local FOLDER_NAME = "delta"
 if not isfolder(FOLDER_NAME) then
     makefolder(FOLDER_NAME)
 end
+
+-- Variabel pengaman anti-looping tak terbatas pada SearchBox
+local isSearching = false
 
 -- =============================================================================
 -- ADVANCED SYSTEM: BYPASS ENGINE ENVIRONMENT (LOADSTRING & REQUIRE OVERRIDE)
@@ -1372,28 +1375,30 @@ end
 -- SYSTEM UTAMA 1: REFRESH & RENDER LIST SCRIPT (PANEL HOME)
 -- =============================================================================
 local function refreshHomeList(searchFilter)
-    -- Bersihkan semua item tiruan lama di dalam ScrollingFrame secara aman
+    -- Bersihkan seluruh tiruan objek list lama di dalam ScrollingFrame secara aman
     for _, item in ipairs(ScrollingHome:GetChildren()) do
         if item:IsA("TextLabel") and item ~= SampleTemplate then
             item:Destroy()
         end
     end
 
-    -- Normalisasi filter teks pencarian
-    local cleanFilter = searchFilter and searchFilter:lower() or ""
-    if cleanFilter == "search for script..." then
-        cleanFilter = ""
+    -- Filter text processing (Pembersihan spasi dan pemastian text kecil)
+    local cleanFilter = ""
+    if searchFilter and searchFilter ~= "Search for Script..." and searchFilter ~= "" then
+        cleanFilter = string.lower(searchFilter):gsub("%s+", "")
     end
 
-    -- 1. Render 4 Script Cloud (Wajib Masuk List & Permanen)
+    -- 1. RENDER 4 SCRIPT CLOUD UTAMA
     for _, cloudData in ipairs(CloudScripts) do
         local targetName = cloudData.Name:upper()
-        if cleanFilter == "" or targetName:lower():find(cleanFilter, 1, true) then
+        local matchName = string.lower(targetName):gsub("%s+", "")
+
+        if cleanFilter == "" or string.find(matchName, cleanFilter, 1, true) then
             local clone = SampleTemplate:Clone()
             clone.Text = "    " .. targetName
             clone.Name = "Cloud_" .. cloudData.Name
             
-            -- Ambil seluruh sub-objek berjenis tombol (bermerek nama "Button" di dokumen Anda)
+            -- Pencarian tombol secara presisi berdasarkan posisi ZIndex / LayoutOrder bawaan UI Anda
             local uiButtons = {}
             for _, child in ipairs(clone:GetChildren()) do
                 if child:IsA("TextButton") or child:IsA("ImageButton") then
@@ -1401,24 +1406,23 @@ local function refreshHomeList(searchFilter)
                 end
             end
 
-            -- Berdasarkan urutan penciptaan hierarchy dokumen resmi:
-            -- Tombol indeks 1 = Execute Button, Tombol indeks 2 = Delete Button
+            -- Normalisasi penempatan tombol dari dokumen resmi UI LMG2L
             local execBtn = uiButtons[1]
             local delBtn  = uiButtons[2]
 
-            -- Sembunyikan tombol delete secara mutlak untuk kategori Cloud
+            -- Sembunyikan tombol delete mutlak untuk cloud script (Anti-Delete)
             if delBtn then
                 delBtn.Visible = false
             end
 
-            -- Koneksi eksekusi cloud script via internet download string
+            -- Sambungkan fungsi eksekusi cloud script
             if execBtn then
                 execBtn.MouseButton1Click:Connect(function()
                     local rawCode = fetchUrl(cloudData.Url)
                     if rawCode then
                         executeCode(rawCode)
                     else
-                        warn("[NARAKU CLOUD]: Gagal menarik source script dari cloud link.")
+                        warn("[NARAKU CLOUD]: Gagal menarik source script.")
                     end
                 end)
             end
@@ -1428,17 +1432,19 @@ local function refreshHomeList(searchFilter)
         end
     end
 
-    -- 2. Render Script Lokal dari direktori penyimpanan /delta
+    -- 2. RENDER SCRIPT LOKAL DARI DIRECTORY DELTA
     local success, files = pcall(function() return listfiles(FOLDER_NAME) end)
     if success then
         for _, filePath in ipairs(files) do
             local fileName = filePath:match("([^/\\]+)$")
-            local scriptTitle = fileName:gsub("%.txt$", ""):gsub("%.lua$", ""):upper()
+            local pureTitle = fileName:gsub("%.txt$", ""):gsub("%.lua$", "")
+            local targetName = pureTitle:upper()
+            local matchName = string.lower(targetName):gsub("%s+", "")
 
-            if cleanFilter == "" or scriptTitle:lower():find(cleanFilter, 1, true) then
+            if cleanFilter == "" or string.find(matchName, cleanFilter, 1, true) then
                 local clone = SampleTemplate:Clone()
-                clone.Text = "    " .. scriptTitle
-                clone.Name = "Local_" .. scriptTitle
+                clone.Text = "    " .. targetName
+                clone.Name = "Local_" .. targetName
 
                 local uiButtons = {}
                 for _, child in ipairs(clone:GetChildren()) do
@@ -1450,7 +1456,7 @@ local function refreshHomeList(searchFilter)
                 local execBtn = uiButtons[1]
                 local delBtn  = uiButtons[2]
 
-                -- Koneksi eksekusi pembacaan file lokal
+                -- Eksekusi lokal script file
                 if execBtn then
                     execBtn.MouseButton1Click:Connect(function()
                         local successRead, codeContent = pcall(function() return readfile(filePath) end)
@@ -1460,13 +1466,18 @@ local function refreshHomeList(searchFilter)
                     end)
                 end
 
-                -- Koneksi penghapusan file lokal script
+                -- Aksi hapus file lokal script
                 if delBtn then
                     delBtn.Visible = true
                     delBtn.MouseButton1Click:Connect(function()
                         pcall(function() delfile(filePath) end)
-                        local currentSearch = (SearchBox.Text ~= "Search for Script..." and SearchBox.Text ~= "") and SearchBox.Text or ""
-                        refreshHomeList(currentSearch)
+                        
+                        -- Ambil kata kunci pencarian terakhir secara aman tanpa memicu crash
+                        local lastSearch = ""
+                        if SearchBox.Text ~= "Search for Script..." then
+                            lastSearch = SearchBox.Text
+                        end
+                        refreshHomeList(lastSearch)
                     end)
                 end
 
@@ -1491,22 +1502,27 @@ local function setupSmartPlaceholder(textBox, placeholderText)
         if textBox.Text:gsub("^%s*(.-)%s*$", "%1") == "" then
             textBox.Text = placeholderText
             if textBox == SearchBox then
+                isSearching = true
                 refreshHomeList("")
+                isSearching = false
             end
         end
     end)
 end
 
--- Registrasi standarisasi pemicu placeholder
 setupSmartPlaceholder(SearchBox, "Search for Script...")
 setupSmartPlaceholder(TitleBox, "Enter Your Title...")
 setupSmartPlaceholder(ScriptBox, "print('Hello World')")
 
--- Penanganan Fitur Search Box Tanpa Memicu Loop-Error
+-- Logika Real-time Filter Pencarian yang Diproteksi dari Loop Crash
 SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    if isSearching then return end -- Cegah tabrakan proses jika list internal sedang di-render
+    
     local currentText = SearchBox.Text
     if currentText ~= "Search for Script..." then
+        isSearching = true
         refreshHomeList(currentText)
+        isSearching = false
     end
 end)
 
@@ -1514,7 +1530,7 @@ end)
 -- SYSTEM UTAMA 3: LOGIKA ACTIONS UTAMA BUTTON (PANEL MAIN)
 -- =============================================================================
 
--- Fungsi Add Script: Menambahkan script dari editor ke folder lokal delta
+-- Fungsi Add Script: Simpan teks kode dari editor ke folder lokal delta
 AddScriptBtn.MouseButton1Click:Connect(function()
     local title = TitleBox.Text:gsub("^%s*(.-)%s*$", "%1")
     local code = ScriptBox.Text
@@ -1535,11 +1551,11 @@ AddScriptBtn.MouseButton1Click:Connect(function()
     end)
 
     if successWrite then
-        TitleBox.Text = "Enter Your Title..." -- Kembalikan ke text placeholder semula
-        local currentSearch = (SearchBox.Text ~= "Search for Script..." and SearchBox.Text ~= "") and SearchBox.Text or ""
-        refreshHomeList(currentSearch)
+        TitleBox.Text = "Enter Your Title..."
+        local lastSearch = SearchBox.Text ~= "Search for Script..." and SearchBox.Text or ""
+        refreshHomeList(lastSearch)
     else
-        warn("[NARAKU ERROR]: Gagal menulis file ke direktori eksploit: " .. tostring(err))
+        warn("[NARAKU ERROR]: Gagal menulis file ke direktori: " .. tostring(err))
     end
 end)
 
