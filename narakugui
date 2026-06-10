@@ -1358,22 +1358,35 @@ local function isValidScriptName(text)
 end
 
 --[[
-	@Function: fetchCloudScript(url)
-	@Desc: Safely fetch remote script via HTTP with error protection
-	@Param: url (string) - Remote script URL
-	@Return: string (script content) or nil (if failed)
+	@Function: fetchAndExecuteCloudScript(url, scriptName)
+	@Desc: Safely fetch RAW LINK via HttpGet, loadstring it, then execute
+	@Param: url (string) - Remote script URL (RAW content)
+	@Param: scriptName (string) - Name of script (for logging)
+	@Return: boolean (success status)
 ]]
-local function fetchCloudScript(url)
-	local success, response = pcall(function()
+local function fetchAndExecuteCloudScript(url, scriptName)
+	-- Step 1: Fetch raw content via HttpGet (wrapped in pcall)
+	local fetchSuccess, rawContent = pcall(function()
 		return game:HttpGet(url)
 	end)
 	
-	if success and response then
-		return response
-	else
-		warn("[NARAKU EXECUTOR] HTTP Fetch Failed for URL: " .. tostring(url))
-		return nil
+	if not fetchSuccess or not rawContent then
+		warn("[NARAKU EXECUTOR] HttpGet Failed for: " .. tostring(scriptName) .. " | URL: " .. tostring(url))
+		return false
 	end
+	
+	-- Step 2: Loadstring the fetched RAW content and execute (wrapped in pcall)
+	local executeSuccess, executeError = pcall(function()
+		loadstring(rawContent)()
+	end)
+	
+	if not executeSuccess then
+		warn("[NARAKU EXECUTOR] Execution Error in '" .. tostring(scriptName) .. "': " .. tostring(executeError))
+		return false
+	end
+	
+	print("[NARAKU EXECUTOR] Successfully fetched & executed: " .. tostring(scriptName))
+	return true
 end
 
 --[[
@@ -1502,10 +1515,8 @@ local function setupExecuteButtonLogic()
 						end
 						
 						if cloudUrl then
-							local source = fetchCloudScript(cloudUrl)
-							if source then
-								executeScript(source, scriptName)
-							end
+							-- Fetch RAW link + loadstring + execute (all in one function)
+							fetchAndExecuteCloudScript(cloudUrl, scriptName)
 						end
 					else
 						-- Load from local filesystem
