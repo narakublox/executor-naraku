@@ -1279,7 +1279,7 @@ task.spawn(function()
 end)
 
 -- =============================================================================
--- PILAR H: ARCHITECTURE ENGINE - PANEL HOME & PANEL MAIN LOGIC SYSTEM (100% FIXED)
+-- PILAR H: ARCHITECTURE ENGINE - PANEL HOME & PANEL MAIN LOGIC SYSTEM (FULL RE-FIXED)
 -- =============================================================================
 -- Referensi Objek Berdasarkan Data LMG2L UI Dokumen Resmi
 local ScreenGui = LMG2L["NarakuUI_1"]
@@ -1289,7 +1289,7 @@ local PanelMain = LMG2L["PanelMain_21"]
 -- Komponen Utama Panel Home
 local SearchBox = PanelHome:WaitForChild("SearchBox")
 local ScrollingHome = PanelHome:WaitForChild("ScrollingFrame")
-local SampleTemplate = ScrollingHome:WaitForChild("NameTitle") -- Berupa TextLabel sesuai dokumen
+local SampleTemplate = ScrollingHome:WaitForChild("NameTitle") -- Berupa TextLabel (Template List Utama)
 
 -- Komponen Utama Panel Main
 local TitleBox = PanelMain:WaitForChild("TitleBox")
@@ -1315,9 +1315,6 @@ local FOLDER_NAME = "delta"
 if not isfolder(FOLDER_NAME) then
     makefolder(FOLDER_NAME)
 end
-
--- Variabel pengaman anti-looping tak terbatas pada SearchBox
-local isSearching = false
 
 -- =============================================================================
 -- ADVANCED SYSTEM: BYPASS ENGINE ENVIRONMENT (LOADSTRING & REQUIRE OVERRIDE)
@@ -1372,118 +1369,93 @@ local function fetchUrl(url)
 end
 
 -- =============================================================================
--- SYSTEM UTAMA 1: REFRESH & RENDER LIST SCRIPT (PANEL HOME)
+-- SYSTEM UTAMA 1: LOGIKA RENDER AWAL / RE-GENERATE BASE LIST (DIPANGGIL JARANG)
 -- =============================================================================
-local function refreshHomeList(searchFilter)
-    -- Bersihkan seluruh tiruan objek list lama di dalam ScrollingFrame secara aman
+local function generateMasterList()
+    -- Bersihkan tiruan lama yang ada di list sebelumnya
     for _, item in ipairs(ScrollingHome:GetChildren()) do
         if item:IsA("TextLabel") and item ~= SampleTemplate then
             item:Destroy()
         end
     end
 
-    -- Filter text processing (Pembersihan spasi dan pemastian text kecil)
-    local cleanFilter = ""
-    if searchFilter and searchFilter ~= "Search for Script..." and searchFilter ~= "" then
-        cleanFilter = string.lower(searchFilter):gsub("%s+", "")
-    end
-
-    -- 1. RENDER 4 SCRIPT CLOUD UTAMA
+    -- 1. BUILD / INJECT 4 SCRIPT CLOUD UTAMA KE LIST
     for _, cloudData in ipairs(CloudScripts) do
         local targetName = cloudData.Name:upper()
-        local matchName = string.lower(targetName):gsub("%s+", "")
+        local clone = SampleTemplate:Clone()
+        clone.Text = "    " .. targetName
+        clone.Name = "Cloud_" .. targetName -- Beri tanda prefix agar mudah dikenali pencarian
+        
+        -- Hubungkan langsung tombol berdasarkan nama aslinya di dokumen UI Anda
+        local execBtn = clone:FindFirstChild("ExecuteButton")
+        local delBtn = clone:FindFirstChild("DeleteButton")
 
-        if cleanFilter == "" or string.find(matchName, cleanFilter, 1, true) then
-            local clone = SampleTemplate:Clone()
-            clone.Text = "    " .. targetName
-            clone.Name = "Cloud_" .. cloudData.Name
-            
-            -- Pencarian tombol secara presisi berdasarkan posisi ZIndex / LayoutOrder bawaan UI Anda
-            local uiButtons = {}
-            for _, child in ipairs(clone:GetChildren()) do
-                if child:IsA("TextButton") or child:IsA("ImageButton") then
-                    table.insert(uiButtons, child)
-                end
-            end
-
-            -- Normalisasi penempatan tombol dari dokumen resmi UI LMG2L
-            local execBtn = uiButtons[1]
-            local delBtn  = uiButtons[2]
-
-            -- Sembunyikan tombol delete mutlak untuk cloud script (Anti-Delete)
-            if delBtn then
-                delBtn.Visible = false
-            end
-
-            -- Sambungkan fungsi eksekusi cloud script
-            if execBtn then
-                execBtn.MouseButton1Click:Connect(function()
-                    local rawCode = fetchUrl(cloudData.Url)
-                    if rawCode then
-                        executeCode(rawCode)
-                    else
-                        warn("[NARAKU CLOUD]: Gagal menarik source script.")
-                    end
-                end)
-            end
-
-            clone.Visible = true
-            clone.Parent = ScrollingHome
+        -- Sembunyikan tombol delete mutlak untuk kategori Cloud (Anti-Delete)
+        if delBtn then
+            delBtn.Visible = false
         end
+
+        if execBtn then
+            execBtn.MouseButton1Click:Connect(function()
+                local rawCode = fetchUrl(cloudData.Url)
+                if rawCode then
+                    executeCode(rawCode)
+                else
+                    warn("[NARAKU CLOUD]: Gagal menarik source script.")
+                end
+            end)
+        end
+
+        clone.Visible = true
+        clone.Parent = ScrollingHome
     end
 
-    -- 2. RENDER SCRIPT LOKAL DARI DIRECTORY DELTA
+    -- 2. BUILD / INJECT SCRIPT LOKAL DARI DIRECTORY DELTA
     local success, files = pcall(function() return listfiles(FOLDER_NAME) end)
     if success then
         for _, filePath in ipairs(files) do
             local fileName = filePath:match("([^/\\]+)$")
             local pureTitle = fileName:gsub("%.txt$", ""):gsub("%.lua$", "")
             local targetName = pureTitle:upper()
-            local matchName = string.lower(targetName):gsub("%s+", "")
 
-            if cleanFilter == "" or string.find(matchName, cleanFilter, 1, true) then
-                local clone = SampleTemplate:Clone()
-                clone.Text = "    " .. targetName
-                clone.Name = "Local_" .. targetName
+            local clone = SampleTemplate:Clone()
+            clone.Text = "    " .. targetName
+            clone.Name = "Local_" .. targetName
 
-                local uiButtons = {}
-                for _, child in ipairs(clone:GetChildren()) do
-                    if child:IsA("TextButton") or child:IsA("ImageButton") then
-                        table.insert(uiButtons, child)
+            local execBtn = clone:FindFirstChild("ExecuteButton")
+            local delBtn = clone:FindFirstChild("DeleteButton")
+
+            if execBtn then
+                execBtn.MouseButton1Click:Connect(function()
+                    local successRead, codeContent = pcall(function() return readfile(filePath) end)
+                    if successRead then
+                        executeCode(codeContent)
                     end
-                end
-
-                local execBtn = uiButtons[1]
-                local delBtn  = uiButtons[2]
-
-                -- Eksekusi lokal script file
-                if execBtn then
-                    execBtn.MouseButton1Click:Connect(function()
-                        local successRead, codeContent = pcall(function() return readfile(filePath) end)
-                        if successRead then
-                            executeCode(codeContent)
-                        end
-                    end)
-                end
-
-                -- Aksi hapus file lokal script
-                if delBtn then
-                    delBtn.Visible = true
-                    delBtn.MouseButton1Click:Connect(function()
-                        pcall(function() delfile(filePath) end)
-                        
-                        -- Ambil kata kunci pencarian terakhir secara aman tanpa memicu crash
-                        local lastSearch = ""
-                        if SearchBox.Text ~= "Search for Script..." then
-                            lastSearch = SearchBox.Text
-                        end
-                        refreshHomeList(lastSearch)
-                    end)
-                end
-
-                clone.Visible = true
-                clone.Parent = ScrollingHome
+                end)
             end
+
+            if delBtn then
+                delBtn.Visible = true
+                delBtn.MouseButton1Click:Connect(function()
+                    pcall(function() delfile(filePath) end)
+                    -- Re-generate list total hanya jika ada file lokal yang dihapus
+                    generateMasterList()
+                    -- Kembalikan kondisi filter pencarian saat ini
+                    local currentText = SearchBox.Text
+                    if currentText ~= "Search for Script..." and currentText ~= "" then
+                        for _, child in ipairs(ScrollingHome:GetChildren()) do
+                            if child:IsA("TextLabel") and child ~= SampleTemplate then
+                                local matchName = child.Text:lower():gsub("%s+", "")
+                                local cleanFilter = currentText:lower():gsub("%s+", "")
+                                child.Visible = string.find(matchName, cleanFilter, 1, true) ~= nil
+                            end
+                        end
+                    end
+                end)
+            end
+
+            clone.Visible = true
+            clone.Parent = ScrollingHome
         end
     end
 end
@@ -1502,9 +1474,12 @@ local function setupSmartPlaceholder(textBox, placeholderText)
         if textBox.Text:gsub("^%s*(.-)%s*$", "%1") == "" then
             textBox.Text = placeholderText
             if textBox == SearchBox then
-                isSearching = true
-                refreshHomeList("")
-                isSearching = false
+                -- Kembalikan visibilitas semua list ke true tanpa build ulang objek
+                for _, child in ipairs(ScrollingHome:GetChildren()) do
+                    if child:IsA("TextLabel") and child ~= SampleTemplate then
+                        child.Visible = true
+                    end
+                end
             end
         end
     end)
@@ -1514,15 +1489,30 @@ setupSmartPlaceholder(SearchBox, "Search for Script...")
 setupSmartPlaceholder(TitleBox, "Enter Your Title...")
 setupSmartPlaceholder(ScriptBox, "print('Hello World')")
 
--- Logika Real-time Filter Pencarian yang Diproteksi dari Loop Crash
+-- LOGIKA FILTER SEARCH MANDIRI (HANYA MENGUBAH VISIBLE — 0% ALOKASI MEMORI BARU)
 SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-    if isSearching then return end -- Cegah tabrakan proses jika list internal sedang di-render
-    
     local currentText = SearchBox.Text
-    if currentText ~= "Search for Script..." then
-        isSearching = true
-        refreshHomeList(currentText)
-        isSearching = false
+    
+    -- Abaikan jika box masih memuat tulisan placeholder default
+    if currentText == "Search for Script..." then return end
+    
+    local cleanFilter = currentText:lower():gsub("%s+", "")
+
+    -- Cari dan saring langsung komponen list yang sudah eksis di ScrollingFrame
+    for _, child in ipairs(ScrollingHome:GetChildren()) do
+        if child:IsA("TextLabel") and child ~= SampleTemplate then
+            if cleanFilter == "" then
+                child.Visible = true
+            else
+                -- Cari kesamaan kata kunci pada isi Text asli di dalamnya (Akurat 100%)
+                local matchName = child.Text:lower():gsub("%s+", "")
+                if string.find(matchName, cleanFilter, 1, true) then
+                    child.Visible = true
+                else
+                    child.Visible = false
+                end
+            end
+        end
     end
 end)
 
@@ -1552,8 +1542,20 @@ AddScriptBtn.MouseButton1Click:Connect(function()
 
     if successWrite then
         TitleBox.Text = "Enter Your Title..."
-        local lastSearch = SearchBox.Text ~= "Search for Script..." and SearchBox.Text or ""
-        refreshHomeList(lastSearch)
+        -- Re-build pangkalan data list karena ada file lokal baru masuk
+        generateMasterList()
+        
+        -- Kembalikan filter pencarian jika saat ini sedang mengetik sesuatu
+        local currentText = SearchBox.Text
+        if currentText ~= "Search for Script..." and currentText ~= "" then
+            local cleanFilter = currentText:lower():gsub("%s+", "")
+            for _, child in ipairs(ScrollingHome:GetChildren()) do
+                if child:IsA("TextLabel") and child ~= SampleTemplate then
+                    local matchName = child.Text:lower():gsub("%s+", "")
+                    child.Visible = string.find(matchName, cleanFilter, 1, true) ~= nil
+                end
+            end
+        end
     else
         warn("[NARAKU ERROR]: Gagal menulis file ke direktori: " .. tostring(err))
     end
@@ -1585,6 +1587,6 @@ end)
 -- =============================================================================
 -- INITIALIZATION RENDER DAFTAR PERTAMA KALI
 -- =============================================================================
-refreshHomeList("")
+generateMasterList()
 
 return LMG2L["NarakuUI_1"], require;
