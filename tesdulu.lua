@@ -1250,4 +1250,540 @@ task.spawn(function()
     end
 end)
 
+-- ============================================================================
+-- NARAKU BLOX - BACKEND SCRIPT SYSTEM
+-- Kompatibel dengan struktur UI LMG2L ScreenGui
+-- ============================================================================
+
+-- ============================================================================
+-- SEKTOR 0: BYPASS LOADSTRING & REQUIRE
+-- ============================================================================
+
+local originalLoadstring = loadstring
+local originalRequire = require
+
+_G.loadstring = function(code, chunkName)
+    return originalLoadstring(code, chunkName or "=[loadstring]")
+end
+
+_G.require = function(moduleName)
+    return originalRequire(moduleName)
+end
+
+-- ============================================================================
+-- SEKTOR 1: AMBIL REFERENSI DARI LMG2L (YANG SUDAH ADA)
+-- ============================================================================
+
+local HomeScrollingFrame = LMG2L["ScrollingFrame_17"]
+local NameTitle_Template = LMG2L["NameTitle_19"]
+local UIListLayout_Home = LMG2L["UIListLayout_18"]
+
+local TitleBox = LMG2L["TitleBox_37"]
+local AddScriptButton = LMG2L["AddScriptButton_2b"]
+local MainExecuteButton = LMG2L["ExecuteButton_34"]
+local SalinClipboardButton = LMG2L["SalinClipboardButton_25"]
+local ClearButton = LMG2L["ClearButton_2e"]
+local MainScrollingFrame = LMG2L["ScrollingFrame_22"]
+local ScriptBox = LMG2L["ScriptBox_24"]
+
+-- ============================================================================
+-- SEKTOR 2: PLACEHOLDER MANAGEMENT SYSTEM (PERBAIKAN)
+-- ============================================================================
+
+local SCRIPTBOX_PLACEHOLDER = "print ('Hello World')"
+local TITLEBOX_PLACEHOLDER = "Enter Your Title..."
+
+local placeholderState = {
+    scriptBoxHasPlaceholder = true,
+    titleBoxHasPlaceholder = true
+}
+
+local function resetScriptBoxPlaceholder()
+    if ScriptBox then
+        ScriptBox.Text = SCRIPTBOX_PLACEHOLDER
+        placeholderState.scriptBoxHasPlaceholder = true
+    end
+end
+
+local function resetTitleBoxPlaceholder()
+    if TitleBox then
+        TitleBox.Text = TITLEBOX_PLACEHOLDER
+        placeholderState.titleBoxHasPlaceholder = true
+    end
+end
+
+-- ============================================================================
+-- SEKTOR 3: KONFIGURASI TEXTBOX
+-- ============================================================================
+
+if ScriptBox then
+    ScriptBox.TextWrapped = true
+    ScriptBox.ClearTextOnFocus = false
+    ScriptBox.MultiLine = true
+    ScriptBox.ClipsDescendants = true
+    ScriptBox.TextScaled = false
+    
+    -- Remove Focus Event - Restore placeholder jika kosong
+    ScriptBox.FocusLost:Connect(function(enterPressed)
+        local currentText = ScriptBox.Text
+        
+        if currentText == "" or currentText == SCRIPTBOX_PLACEHOLDER then
+            resetScriptBoxPlaceholder()
+        else
+            placeholderState.scriptBoxHasPlaceholder = false
+        end
+    end)
+    
+    -- Input Event - Hapus placeholder saat user ketik
+    ScriptBox.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        
+        if input.UserInputType == Enum.UserInputType.TextInput or input.UserInputType == Enum.UserInputType.Keyboard then
+            if placeholderState.scriptBoxHasPlaceholder and ScriptBox.Text == SCRIPTBOX_PLACEHOLDER then
+                ScriptBox.Text = ""
+                placeholderState.scriptBoxHasPlaceholder = false
+            end
+        end
+    end)
+end
+
+if TitleBox then
+    -- Remove Focus Event - Restore placeholder jika kosong
+    TitleBox.FocusLost:Connect(function(enterPressed)
+        local currentText = TitleBox.Text
+        
+        if currentText == "" or currentText == TITLEBOX_PLACEHOLDER then
+            resetTitleBoxPlaceholder()
+        else
+            placeholderState.titleBoxHasPlaceholder = false
+        end
+    end)
+    
+    -- Input Event - Hapus placeholder saat user ketik
+    TitleBox.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        
+        if input.UserInputType == Enum.UserInputType.TextInput or input.UserInputType == Enum.UserInputType.Keyboard then
+            if placeholderState.titleBoxHasPlaceholder and TitleBox.Text == TITLEBOX_PLACEHOLDER then
+                TitleBox.Text = ""
+                placeholderState.titleBoxHasPlaceholder = false
+            end
+        end
+    end)
+end
+
+if NameTitle_Template then
+    NameTitle_Template.Visible = false
+end
+
+-- ============================================================================
+-- SEKTOR 4: CLOUD SCRIPTS DATABASE
+-- ============================================================================
+
+local cloudScripts = {
+    {Name = "TOOLBOX CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/UpdateToolbox"},
+    {Name = "ARCHIMEDES CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/Archimedes"},
+    {Name = "TERRAIN CLOUD", Url = "https://raw.githubusercontent.com/narakublox/PluginStudioLite/refs/heads/main/terrain.lua"},
+    {Name = "FLY CLOUD", Url = "https://pastefy.app/ofUG7Jsv/raw"}
+}
+
+-- ============================================================================
+-- SEKTOR 5: STATE TRACKING
+-- ============================================================================
+
+local DELTA_FOLDER = "delta"
+local cloudScriptClones = {}
+local localScriptClones = {}
+local currentEditingFile = nil
+
+-- ============================================================================
+-- SEKTOR 6: INITIALIZE DELTA FOLDER
+-- ============================================================================
+
+if not isfolder(DELTA_FOLDER) then
+    pcall(function()
+        makefolder(DELTA_FOLDER)
+    end)
+end
+
+-- ============================================================================
+-- SEKTOR 7: HTTP HANDLER
+-- ============================================================================
+
+local function fetchCloudScript(url)
+    local success, response = pcall(function()
+        return game:HttpGet(url, true)
+    end)
+    
+    if success and response and response ~= "" then
+        return response
+    else
+        return nil
+    end
+end
+
+-- ============================================================================
+-- SEKTOR 8: LOADSTRING EXECUTOR WITH ENVIRONMENT
+-- ============================================================================
+
+local function executeScript(scriptContent, scriptName)
+    if not scriptContent or scriptContent == "" then
+        return false
+    end
+    
+    -- Create custom environment untuk script
+    local customEnv = setmetatable({}, {__index = _G})
+    
+    -- Inject global functions
+    customEnv.loadstring = _G.loadstring
+    customEnv.require = _G.require
+    customEnv.print = print
+    customEnv.warn = warn
+    customEnv.game = game
+    customEnv.workspace = workspace
+    customEnv.script = script
+    customEnv.Instance = Instance
+    customEnv.Vector3 = Vector3
+    customEnv.CFrame = CFrame
+    customEnv.Color3 = Color3
+    customEnv.BrickColor = BrickColor
+    customEnv.task = task
+    customEnv.wait = wait
+    customEnv.spawn = spawn
+    customEnv.setfenv = setfenv
+    customEnv.getfenv = getfenv
+    
+    local loadSuccess, loadedFunc = pcall(function()
+        return loadstring(scriptContent, scriptName)
+    end)
+    
+    if not loadSuccess then
+        return false
+    end
+    
+    if not loadedFunc then
+        return false
+    end
+    
+    -- Set environment untuk function
+    pcall(function()
+        if setfenv then
+            setfenv(loadedFunc, customEnv)
+        end
+    end)
+    
+    local execSuccess, execError = pcall(function()
+        loadedFunc()
+    end)
+    
+    if not execSuccess then
+        return false
+    end
+    
+    return true
+end
+
+-- ============================================================================
+-- SEKTOR 9: EXTRACT FILENAME
+-- ============================================================================
+
+local function extractFileName(filePath)
+    local fileName = filePath:match("([^/\\]+)$") or filePath
+    fileName = fileName:gsub("%.lua$", ""):gsub("%.txt$", "")
+    return fileName
+end
+
+-- ============================================================================
+-- SEKTOR 10: RENDER CLOUD SCRIPTS
+-- ============================================================================
+
+local function renderCloudScripts()
+    -- Clear previous cloud scripts
+    for _, clone in ipairs(cloudScriptClones) do
+        pcall(function()
+            clone:Destroy()
+        end)
+    end
+    cloudScriptClones = {}
+    
+    for _, cloudData in ipairs(cloudScripts) do
+        local clone = NameTitle_Template:Clone()
+        clone.Name = "CloudScript_" .. cloudData.Name:gsub(" ", "_")
+        clone.Text = "    " .. cloudData.Name
+        clone.Visible = true
+        
+        local deleteBtn = clone:FindFirstChild("DeleteButton")
+        if deleteBtn then
+            deleteBtn.Visible = false
+        end
+        
+        local executeBtn = clone:FindFirstChild("ExecuteButton")
+        if executeBtn then
+            executeBtn.Name = "ExecuteButton"
+            executeBtn.MouseButton1Click:Connect(function()
+                task.spawn(function()
+                    local scriptSource = fetchCloudScript(cloudData.Url)
+                    if scriptSource then
+                        executeScript(scriptSource, cloudData.Name)
+                    end
+                end)
+            end)
+        end
+        
+        clone.Parent = HomeScrollingFrame
+        table.insert(cloudScriptClones, clone)
+    end
+end
+
+-- ============================================================================
+-- SEKTOR 11: REFRESH LOCAL SCRIPTS
+-- ============================================================================
+
+local function refreshLocalScripts()
+    -- Hapus script lokal yang sebelumnya
+    for child, _ in pairs(localScriptClones) do
+        if child and child.Parent then
+            pcall(function()
+                child:Destroy()
+            end)
+        end
+    end
+    localScriptClones = {}
+    
+    -- Fetch files dari folder
+    local files = {}
+    local success, fileList = pcall(function()
+        return listfiles(DELTA_FOLDER)
+    end)
+    
+    if success and fileList then
+        for _, filePath in ipairs(fileList) do
+            if filePath:match("%.lua$") or filePath:match("%.txt$") then
+                table.insert(files, filePath)
+            end
+        end
+    end
+    
+    -- Render setiap file lokal
+    for _, filePath in ipairs(files) do
+        local displayName = extractFileName(filePath)
+        
+        local clone = NameTitle_Template:Clone()
+        clone.Name = "LocalScript_" .. displayName:gsub(" ", "_")
+        clone.Text = "    " .. displayName
+        clone.Visible = true
+        
+        local executeBtn = clone:FindFirstChild("ExecuteButton")
+        if executeBtn then
+            executeBtn.Visible = true
+            executeBtn.MouseButton1Click:Connect(function()
+                task.spawn(function()
+                    local success, content = pcall(function()
+                        return readfile(filePath)
+                    end)
+                    if success and content then
+                        executeScript(content, displayName)
+                    end
+                end)
+            end)
+        end
+        
+        local deleteBtn = clone:FindFirstChild("DeleteButton")
+        if deleteBtn then
+            deleteBtn.Visible = true
+            deleteBtn.MouseButton1Click:Connect(function()
+                task.spawn(function()
+                    pcall(function()
+                        delfile(filePath)
+                    end)
+                    
+                    if clone and clone.Parent then
+                        clone:Destroy()
+                    end
+                    
+                    localScriptClones[clone] = nil
+                    
+                    if currentEditingFile == filePath then
+                        currentEditingFile = nil
+                        resetTitleBoxPlaceholder()
+                        resetScriptBoxPlaceholder()
+                    end
+                    
+                    refreshLocalScripts()
+                end)
+            end)
+        end
+        
+        -- Edit function - Click untuk load script ke editor
+        local lastClickTime = 0
+        clone.MouseButton1Click:Connect(function()
+            local currentTime = tick()
+            
+            -- Double click detection
+            if (currentTime - lastClickTime) < 0.3 then
+                task.spawn(function()
+                    local success, content = pcall(function()
+                        return readfile(filePath)
+                    end)
+                    if success and content then
+                        if TitleBox then
+                            TitleBox.Text = displayName
+                            placeholderState.titleBoxHasPlaceholder = false
+                        end
+                        if ScriptBox then
+                            ScriptBox.Text = content
+                            placeholderState.scriptBoxHasPlaceholder = false
+                        end
+                        currentEditingFile = filePath
+                    end
+                end)
+            end
+            
+            lastClickTime = currentTime
+        end)
+        
+        clone.Parent = HomeScrollingFrame
+        localScriptClones[clone] = filePath
+    end
+end
+
+-- ============================================================================
+-- SEKTOR 12: ADD SCRIPT BUTTON
+-- ============================================================================
+
+if AddScriptButton then
+    AddScriptButton.MouseButton1Click:Connect(function()
+        task.spawn(function()
+            local titleText = (TitleBox.Text or ""):match("^%s*(.-)%s*$") or ""
+            local scriptText = ScriptBox.Text or ""
+            
+            -- Validasi: jangan simpan jika masih placeholder atau kosong
+            if titleText == "" or titleText == TITLEBOX_PLACEHOLDER or titleText:match("^%s*$") then
+                return
+            end
+            
+            if scriptText == "" or scriptText == SCRIPTBOX_PLACEHOLDER or scriptText:match("^%s*$") then
+                return
+            end
+            
+            local safeTitle = titleText:gsub("[/<>:\"|?*\\]", "_"):gsub("%s+", "_")
+            local filePath = DELTA_FOLDER .. "/" .. safeTitle .. ".lua"
+            
+            -- Update existing atau create new
+            local saveSuccess = pcall(function()
+                writefile(filePath, scriptText)
+            end)
+            
+            if saveSuccess then
+                resetTitleBoxPlaceholder()
+                resetScriptBoxPlaceholder()
+                currentEditingFile = nil
+                refreshLocalScripts()
+            end
+        end)
+    end)
+end
+
+-- ============================================================================
+-- SEKTOR 13: EXECUTE BUTTON (MAIN)
+-- ============================================================================
+
+if MainExecuteButton then
+    MainExecuteButton.MouseButton1Click:Connect(function()
+        task.spawn(function()
+            local scriptText = ScriptBox.Text or ""
+            
+            -- Jangan execute jika masih placeholder atau kosong
+            if scriptText == "" or scriptText == SCRIPTBOX_PLACEHOLDER or scriptText:match("^%s*$") then
+                return
+            end
+            
+            executeScript(scriptText, "Direct Script Execution")
+        end)
+    end)
+end
+
+-- ============================================================================
+-- SEKTOR 14: COPY TO CLIPBOARD BUTTON
+-- ============================================================================
+
+if SalinClipboardButton then
+    SalinClipboardButton.MouseButton1Click:Connect(function()
+        task.spawn(function()
+            local scriptText = ScriptBox.Text or ""
+            
+            -- Jangan copy jika masih placeholder atau kosong
+            if scriptText == "" or scriptText == SCRIPTBOX_PLACEHOLDER or scriptText:match("^%s*$") then
+                return
+            end
+            
+            pcall(function()
+                if setclipboard then
+                    setclipboard(scriptText)
+                elseif toclipboard then
+                    toclipboard(scriptText)
+                end
+            end)
+        end)
+    end)
+end
+
+-- ============================================================================
+-- SEKTOR 15: CLEAR BUTTON
+-- ============================================================================
+
+if ClearButton then
+    ClearButton.MouseButton1Click:Connect(function()
+        resetScriptBoxPlaceholder()
+        resetTitleBoxPlaceholder()
+        currentEditingFile = nil
+    end)
+end
+
+-- ============================================================================
+-- SEKTOR 16: KEYBOARD SHORTCUTS
+-- ============================================================================
+
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    -- Ctrl + S = Save Script
+    if input.KeyCode == Enum.KeyCode.S and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+        if AddScriptButton then
+            AddScriptButton:Fire("MouseButton1Click")
+        end
+    end
+    
+    -- Ctrl + E = Execute Script
+    if input.KeyCode == Enum.KeyCode.E and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+        if MainExecuteButton then
+            MainExecuteButton:Fire("MouseButton1Click")
+        end
+    end
+    
+    -- Ctrl + L = Clear
+    if input.KeyCode == Enum.KeyCode.L and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+        if ClearButton then
+            ClearButton:Fire("MouseButton1Click")
+        end
+    end
+end)
+
+-- ============================================================================
+-- SEKTOR 17: INITIALIZATION & STARTUP
+-- ============================================================================
+
+renderCloudScripts()
+refreshLocalScripts()
+
+print("[NARAKU BLOX] Backend System Successfully Loaded!")
+print("[NARAKU BLOX] Script Manager Ready for Use")
+print("[NARAKU BLOX] Shortcuts: Ctrl+S (Save), Ctrl+E (Execute), Ctrl+L (Clear)")
+
+-- ============================================================================
+-- END OF BACKEND SCRIPT
+-- ============================================================================
+
 return LMG2L["NarakuUI_1"], require;
