@@ -1337,7 +1337,7 @@ if ScriptBox then
 end
 
 if TitleBox then
-    TitleBox.TextSize = 14
+    TitleBox.TextSize = 12
     
     -- Hapus otomatis saat diklik (Focused)
     TitleBox.Focused:Connect(function()
