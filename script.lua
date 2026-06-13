@@ -744,6 +744,210 @@ LMG2L["UIGradient_5f"] = Instance.new("UIGradient", LMG2L["UIStroke_5e"]);
 LMG2L["UIGradient_5f"]["Rotation"] = 15;
 LMG2L["UIGradient_5f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.500, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
 
+-- NARAKU HUB - OPTIMIZED BY SENIOR DEVELOPER
+local LMG2L = {};
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
+-- 3. SYSTEM ANTI HILANG SCREEN GUI (Mencegah ResetOnSpawn & Re-creation otomatis jika terhapus)
+local function CreateGUI()
+    if game:GetService("CoreGui"):FindFirstChild("NarakuHubUI") then
+        game:GetService("CoreGui"):FindFirstChild("NarakuHubUI"):Destroy()
+    end
+
+    LMG2L["ScreenGui_1"] = Instance.new("ScreenGui")
+    LMG2L["ScreenGui_1"].Name = "NarakuHubUI"
+    LMG2L["ScreenGui_1"].ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    LMG2L["ScreenGui_1"].ResetOnSpawn = false -- Agar tidak hilang saat player mati/spawn kembali
+
+    -- Proteksi exploit / anti-deletion sederhana menggunakan CoreGui (jika executor mendukung)
+    local parentTarget = game:GetService("CoreGui") or Players.LocalPlayer:WaitForChild("PlayerGui")
+    LMG2L["ScreenGui_1"].Parent = parentTarget
+
+    -- ==================== SYSTEM MAIN PANEL ====================
+    LMG2L["Panel_2"] = Instance.new("Frame", LMG2L["ScreenGui_1"]);
+    LMG2L["Panel_2"]["BorderSizePixel"] = 0;
+    LMG2L["Panel_2"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+    LMG2L["Panel_2"]["Size"] = UDim2.new(0, 266, 0, 302);
+    LMG2L["Panel_2"]["Position"] = UDim2.new(0, 80, 0, 10);
+    LMG2L["Panel_2"]["Name"] = [[Panel]];
+    LMG2L["Panel_2"]["BackgroundTransparency"] = 0.4;
+    LMG2L["Panel_2"].ClipsDescendants = true
+
+    -- 1. Fungsionalitas Active & Draggable (Custom Modern Drag agar mulus)
+    LMG2L["Panel_2"]["Active"] = true
+    
+    local dragging, dragInput, dragStart, startPos
+    LMG2L["Panel_2"].InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = LMG2L["Panel_2"].Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    LMG2L["Panel_2"].InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            LMG2L["Panel_2"].Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    LMG2L["UICorner_3"] = Instance.new("UICorner", LMG2L["Panel_2"]);
+
+    -- Tambahkan UIStroke pada Panel
+    local PanelStroke = Instance.new("UIStroke", LMG2L["Panel_2"])
+    PanelStroke.Thickness = 2
+    PanelStroke.Color = Color3.fromRGB(255, 255, 255)
+
+    -- Efek Rotation UIGradient pada UIStroke
+    local PanelGradient = Instance.new("UIGradient", PanelStroke)
+    PanelGradient.Color = ColorColorSequence = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+    }
+    
+    -- Loop Rotasi UIGradient secara Realtime (Mulus)
+    RunService.RenderStepped:Connect(function(dt)
+        PanelGradient.Rotation = (PanelGradient.Rotation + 90 * dt) % 360
+    end)
+
+    -- ==================== HEADER FRAME & CONTROLS ====================
+    local HeaderFrame = Instance.new("Frame", LMG2L["Panel_2"])
+    HeaderFrame.Name = "HeaderFrame"
+    HeaderFrame.Size = UDim2.new(1, 0, 0, 34)
+    HeaderFrame.BackgroundTransparency = 1
+
+    local TextTitle = Instance.new("TextLabel", HeaderFrame)
+    TextTitle.Name = "TextTitle"
+    TextTitle.Text = "NARAKU HUB"
+    TextTitle.Size = UDim2.new(0, 120, 1, 0)
+    TextTitle.Position = UDim2.new(0, 10, 0, 0)
+    TextTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextTitle.TextSize = 16
+    TextTitle.Font = Enum.Font.SourceSansBold
+    TextTitle.TextXAlignment = Enum.TextXAlignment.Left
+    TextTitle.BackgroundTransparency = 1
+
+    -- Efek Mengkilap (Glint/Shine Effect) pada TextTitle menggunakan UIGradient
+    local TitleGradient = Instance.new("UIGradient", TextTitle)
+    TitleGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.45, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 0)), -- Warna kilap (Kuning Emas / Putih Terang)
+        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+    }
+    
+    -- Menggerakkan Offset Gradient untuk efek kilap berjalan
+    task.spawn(function()
+        while true do
+            for o = -1, 1, 0.03 do
+                TitleGradient.Offset = Vector2.new(o, 0)
+                task.wait(0.02)
+            end
+            task.wait(2) -- Jeda waktu sebelum kilap muncul kembali
+        end
+    end)
+
+    -- Tombol-tombol Kontrol Frame
+    local MiniButton = Instance.new("TextButton", HeaderFrame)
+    MiniButton.Name = "MiniButton"
+    MiniButton.Text = "-"
+    MiniButton.Size = UDim2.new(0, 20, 0, 20)
+    MiniButton.Position = UDim2.new(1, -75, 0, 7)
+    MiniButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MiniButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
+    local RestoreButton = Instance.new("TextButton", HeaderFrame)
+    RestoreButton.Name = "RestoreButton"
+    RestoreButton.Text = "+"
+    RestoreButton.Size = UDim2.new(0, 20, 0, 20)
+    RestoreButton.Position = UDim2.new(1, -50, 0, 7)
+    RestoreButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    RestoreButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
+    local CloseButton = Instance.new("TextButton", HeaderFrame)
+    CloseButton.Name = "CloseButton"
+    CloseButton.Text = "X"
+    CloseButton.Size = UDim2.new(0, 20, 0, 20)
+    CloseButton.Position = UDim2.new(1, -25, 0, 7)
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+
+    -- Instance Corners untuk tombol kontrol
+    Instance.new("UICorner", MiniButton).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", RestoreButton).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 4)
+
+    -- SCROLLING FRAME ISI UTAMA
+    LMG2L["ScrollingFrame_4"] = Instance.new("ScrollingFrame", LMG2L["Panel_2"]);
+    LMG2L["ScrollingFrame_4"]["BorderSizePixel"] = 0;
+    LMG2L["ScrollingFrame_4"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+    LMG2L["ScrollingFrame_4"]["Size"] = UDim2.new(0, 260, 0, 266);
+    LMG2L["ScrollingFrame_4"]["Position"] = UDim2.new(0, 4, 0, 34);
+    LMG2L["ScrollingFrame_4"]["ScrollBarThickness"] = 2;
+    LMG2L["ScrollingFrame_4"]["BackgroundTransparency"] = 1;
+
+    -- Layouting
+    local ListLayout = Instance.new("UIListLayout", LMG2L["ScrollingFrame_4"])
+    ListLayout.Padding = UDim.new(0, 4)
+
+    -- ==================== LOGIC BUTTONS WITH TWEEN ====================
+    
+    -- • Klik MiniButton "-" untuk mengecilkan size Panel
+    MiniButton.MouseButton1Click:Connect(function()
+        TweenService:Create(LMG2L["Panel_2"], TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 266, 0, 50)
+        }):Play()
+    end)
+
+    -- • Klik RestoreButton "+" untuk mengembalikan size Panel semula
+    RestoreButton.MouseButton1Click:Connect(function()
+        TweenService:Create(LMG2L["Panel_2"], TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 266, 0, 302)
+        }):Play()
+    end)
+
+    -- • Klik CloseButton "X" dengan Animasi Keluar/Close
+    CloseButton.MouseButton1Click:Connect(function()
+        local closeTween = TweenService:Create(LMG2L["Panel_2"], TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0),
+            BackgroundTransparency = 1
+        })
+        closeTween:Play()
+        closeTween.Completed:Connect(function()
+            LMG2L["ScreenGui_1"]:Destroy()
+        end)
+    end)
+
+    -- ==================== 4. ANIMASI MUNCUL (EASE OUT APPEARANCE) ====================
+    local TargetSize = UDim2.new(0, 266, 0, 302)
+    LMG2L["Panel_2"].Size = UDim2.new(0, 0, 0, 0) -- Dimulai dari ukuran 0 saat eksekusi
+    
+    TweenService:Create(LMG2L["Panel_2"], TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = TargetSize
+    }):Play()
+
+    -- SCRIPT COPIED DARI STRUKTUR ANDA (Ditempelkan di bawah layouting)
+    -- Contoh salah satu komponen agar layout terisi:
+    LMG2L["Judul_13"] = Instance.new("TextLabel", LMG2L["ScrollingFrame_4"]);
+    LMG2L["Judul_13"]["Text"] = [[SCRIPT PLAYER]];
+    LMG2L["Judul_13"]["Size"] = UDim2.new(0, 258, 0, 20);
+    LMG2L["Judul_13"]["TextColor3"] = Color3.fromRGB(232, 232, 232);
+    LMG2L["Judul_13"]["BackgroundTransparency"] = 1;
+    LMG2L["Judul_13"]["Font"] = Enum.Font.SourceSansBold
+end
+
+CreateGUI()
 
 return LMG2L["ScreenGui_1"], require;
