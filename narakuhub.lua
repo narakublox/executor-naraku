@@ -890,6 +890,202 @@ LMG2L["UICorner_70"] = Instance.new("UICorner", LMG2L["CloseButton_6f"]);
 LMG2L["UIGradient_71"] = Instance.new("UIGradient", LMG2L["CloseButton_6f"]);
 LMG2L["UIGradient_71"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(173, 0, 0)),ColorSequenceKeypoint.new(0.500, Color3.fromRGB(246, 0, 0)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(176, 0, 0))};
 
+-- =============================================================================
+-- SENIOR EXECUTION INTERACTION SCRIPT (ROBLOX EXECUTOR OPTIMIZED)
+-- =============================================================================
 
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- Referensi Objek Utama dari Tabel LMG2L
+local ScreenGui = LMG2L["ScreenGui_1"]
+local MainPanel = LMG2L["Panel_3"]
+local ScrollingFrame = LMG2L["ScrollingFrame_5"]
+local ConfirmPanel = LMG2L["PanelConfrim_62"]
+local CancelButton = LMG2L["CancelButton_6a"]
+local CloseConfirmButton = LMG2L["CloseButton_6f"]
+
+-- Menentukan Tombol Utama secara Dinamis berdasarkan Pola Struktur Top Bar Panel
+local MiniRestoreButton, MainCloseButton
+for _, child in ipairs(MainPanel:GetChildren()) do
+    if child:IsA("TextButton") then
+        if child.Text == "-" or child.Name:lower():find("mini") or child.Name:lower():find("restore") then
+            MiniRestoreButton = child
+        elseif child.Text:lower() == "x" or child.Name:lower():find("close") then
+            MainCloseButton = child
+        end
+    end
+end
+
+-- Cari juga TextLabel Title Utama untuk Efek Mengkilap
+local TitleLabel
+for _, child in ipairs(MainPanel:GetChildren()) do
+    if child:IsA("TextLabel") and (child.Name:lower():find("title") or child.Position.Y.Offset < 30) then
+        TitleLabel = child
+        break
+    end
+end
+
+-- =============================================================================
+-- 1. SYSTEM PANEL DRAG (Standard Smooth Dragging)
+-- =============================================================================
+local dragging, dragInput, dragStart, startPosition
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainPanel.Position = UDim2.new(
+        startPosition.X.Scale, 
+        startPosition.X.Offset + delta.X, 
+        startPosition.Y.Scale, 
+        startPosition.Y.Offset + delta.Y
+    )
+end
+
+MainPanel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPosition = MainPanel.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MainPanel.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+
+-- =============================================================================
+-- 2. SYSTEM MINI / RESTORE BUTTON
+-- =============================================================================
+if MiniRestoreButton then
+    local isMinimized = false
+    local originalSize = UDim2.new(0, 266, 0, 302)
+    local minimizedSize = UDim2.new(0, 266, 0, 50)
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+    MiniRestoreButton.MouseButton1Click:Connect(function()
+        if not isMinimized then
+            -- Kondisi Buka (-): Perkecil Panel
+            isMinimized = true
+            MiniRestoreButton.Text = "+"
+            ScrollingFrame.Visible = false
+            TweenService:Create(MainPanel, tweenInfo, {Size = minimizedSize}):Play()
+        else
+            -- Kondisi Mini (+): Kembalikan ke Ukuran Semula
+            isMinimized = false
+            MiniRestoreButton.Text = "-"
+            local tween = TweenService:Create(MainPanel, tweenInfo, {Size = originalSize})
+            tween:Play()
+            tween.Completed:Connect(function()
+                if not isMinimized then
+                    ScrollingFrame.Visible = true
+                end
+            end)
+        end
+    end)
+end
+
+
+-- =============================================================================
+-- 3. SYSTEM CLOSE & CONFIRMATION PANEL
+-- =============================================================================
+-- Memastikan Panel Konfirmasi bersembunyi di awal
+if ConfirmPanel then ConfirmPanel.Visible = false end
+
+if MainCloseButton and ConfirmPanel then
+    MainCloseButton.MouseButton1Click:Connect(function()
+        -- Munculkan panel konfirmasi dengan animasi pop-up lembut
+        ConfirmPanel.Size = UDim2.new(0, 0, 0, 0)
+        ConfirmPanel.Visible = true
+        TweenService:Create(ConfirmPanel, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 258, 0, 100) -- Disesuaikan dengan ukuran standar panel konfirmasi Localmaze
+        }):Play()
+    end)
+end
+
+if CancelButton and ConfirmPanel then
+    CancelButton.MouseButton1Click:Connect(function()
+        -- Batalkan penutupan, sembunyikan kembali
+        local tween = TweenService:Create(ConfirmPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+        tween:Play()
+        tween.Completed:Connect(function()
+            ConfirmPanel.Visible = false
+        end)
+    end)
+end
+
+if CloseConfirmButton and ConfirmPanel then
+    CloseConfirmButton.MouseButton1Click:Connect(function()
+        -- Animasi penutupan Main Panel terlebih dahulu sebelum di-destroy
+        if ConfirmPanel then ConfirmPanel.Visible = false end
+        local closeTween = TweenService:Create(MainPanel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0)
+        })
+        closeTween:Play()
+        closeTween.Completed:Connect(function()
+            ScreenGui:Destroy()
+        end)
+    end)
+end
+
+
+-- =============================================================================
+-- 4. ANIMASI INTERAKSI (TWEENING APPEARANCE)
+-- =============================================================================
+-- Efek Pop-up saat pertama kali di-execute
+local finalSize = UDim2.new(0, 266, 0, 302)
+MainPanel.Size = UDim2.new(0, 266, 0, 0) -- Mulai dengan tinggi 0 dari AnchorPoint awal
+TweenService:Create(MainPanel, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = finalSize
+}):Play()
+
+
+-- =============================================================================
+-- 5. EFEK ROTASI GRADIENT (UI STROKE & UI GRADIENT CHROMA/RGB)
+-- =============================================================================
+-- Menghubungkan efek rotasi dinamis ke UIGradient yang menempel pada UIStroke di Main Panel
+local StrokeGradient = MainPanel:FindFirstChildOfClass("UIStroke") and MainPanel:FindFirstChildOfClass("UIStroke"):FindFirstChildOfClass("UIGradient")
+                    or MainPanel:FindFirstChildOfClass("UIGradient")
+
+if StrokeGradient then
+    local currentRotation = 0
+    RunService.RenderStepped:Connect(function(deltaTime)
+        currentRotation = (currentRotation + (90 * deltaTime)) % 360 -- Berputar 90 derajat per detik
+        StrokeGradient.Rotation = currentRotation
+    end)
+end
+
+
+-- =============================================================================
+-- 6. EFEK MENGKILAP TEXT TITLE (SHINE EFFECT)
+-- =============================================================================
+-- Animasi loop berkelanjutan pada UIGradient Text Title (jika ada)
+if TitleLabel then
+    local TitleGradient = TitleLabel:FindFirstChildOfClass("UIGradient")
+    if TitleGradient then
+        TitleGradient.Offset = Vector2.new(-1, 0)
+        
+        local shineTweenInfo = TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, false, 0)
+        local shineTween = TweenService:Create(TitleGradient, shineTweenInfo, {
+            Offset = Vector2.new(1, 0)
+        })
+        shineTween:Play()
+    end
+end
 
 return LMG2L["ScreenGui_1"], require;
