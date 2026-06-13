@@ -745,7 +745,7 @@ LMG2L["UIGradient_5f"]["Rotation"] = 15;
 LMG2L["UIGradient_5f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.500, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
 
 -- =============================================================================
--- PREMIUM SYSTEM LOGIC & ANTI-LOSS PROTECTION (100% FIXED & SAFE)
+-- PREMIUM SYSTEM LOGIC & ANTI-LOSS PROTECTION (V7 - IN-PLACE VISIBLE ABSOLUTE FIX)
 -- =============================================================================
 
 local TweenService = game:GetService("TweenService")
@@ -768,7 +768,7 @@ local PanelStroke = LMG2L["UIStroke_5e"]
 local StrokeGradient = PanelStroke and PanelStroke:FindFirstChildOfClass("UIGradient")
 local TitleGradient = TextTitle and TextTitle:FindFirstChildOfClass("UIGradient")
 
--- Konstanta Ukuran & Transparansi Sesuai Dokumen UI
+-- Konstanta Ukuran & Transparansi Sesuai Dokumen UI Anda
 local ORIGINAL_SIZE = UDim2.new(0, 266, 0, 302)
 local MINI_SIZE = UDim2.new(0, 266, 0, 50)
 local ORIGINAL_TRANSPARENCY = Panel and Panel.BackgroundTransparency or 0.4
@@ -776,7 +776,7 @@ local ORIGINAL_TRANSPARENCY = Panel and Panel.BackgroundTransparency or 0.4
 local isTweening = false
 
 -- -----------------------------------------------------------------------------
--- STRICT INITIAL STATE (PENGATURAN VISIBLE SEKETIKA AGAR TIDAK MENUMPUK)
+-- STRICT INITIAL STATE (KUNCI VISIBLE MURNI AGAR TIDAK MENUMPUK SEJAK AWAL)
 -- -----------------------------------------------------------------------------
 if MiniButton and RestoreButton then
     MiniButton.Visible = true       -- Hanya menampilkan tombol "-" di awal
@@ -802,30 +802,29 @@ end
 if TitleGradient then
     task.spawn(function()
         while true do
-            -- Pergeseran offset untuk membuat efek kilatan berjalan melintasi teks
             for offset = -1.8, 1.8, 0.03 do
                 TitleGradient.Offset = Vector2.new(offset, 0)
                 task.wait(0.01)
             end
-            task.wait(2.0) -- Jeda waktu sebelum kilatan berikutnya muncul kembali
+            task.wait(2.0)
         end
     end)
 end
 
 -- -----------------------------------------------------------------------------
--- 3. SYSTEM PROTEKSI ANTI-HILANG (PLAY & STOP SAFE TO COREGUI)
+-- 3. SYSTEM PROTEKSI ANTI-HILANG (MURNI KE COREGUI SINKRON PLAY & STOP SAFE)
 -- -----------------------------------------------------------------------------
 if ScreenGui and ScreenGui:IsA("ScreenGui") then
     ScreenGui.ResetOnSpawn = false -- Mencegah UI terhapus saat karakter mati/ganti mode
     
-    -- Pindahkan Parent ke CoreGui agar aman dari sistem rollback JSON Studio Lite
+    -- Pindahkan Parent ke CoreGui agar aman dari sistem rollback
     pcall(function()
         ScreenGui.Parent = CoreGui
     end)
 end
 
 -- -----------------------------------------------------------------------------
--- 4. CONTROL BUTTONS & HIGH-END SMOOTH TWEENING ANIMATIONS
+-- 4. CONTROL BUTTONS WITH INSTANT VISIBLE SWITCHING
 -- -----------------------------------------------------------------------------
 
 -- [FUNGSI MINI SIZE "-"]
@@ -834,7 +833,7 @@ if MiniButton then
         if isTweening or Panel.Size == MINI_SIZE then return end
         isTweening = true
         
-        -- FIX INSTANT VISIBLE: Tukar visibilitas tombol di awal klik tanpa delay tweening
+        -- KUNCI INSTANT VISIBLE: Langsung balik status sebelum animasi ukuran berjalan
         MiniButton.Visible = false
         RestoreButton.Visible = true
         
@@ -859,12 +858,12 @@ if RestoreButton then
         if isTweening or Panel.Size == ORIGINAL_SIZE then return end
         isTweening = true
         
-        -- FIX INSTANT VISIBLE: Kembalikan visibilitas tombol "-" seketika
+        -- KUNCI INSTANT VISIBLE: Kembalikan visibilitas tombol "-" seketika saat diklik
         RestoreButton.Visible = false
         MiniButton.Visible = true
         
         -- Animasi membesar menggunakan kurva Exponential Out yang mewah dan responsif
-        local restoreTween = TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+        local restoreTween = TweenService:Create(Panel, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
             Size = ORIGINAL_SIZE
         })
         
@@ -876,7 +875,7 @@ if RestoreButton then
     end)
 end
 
--- [FUNGSI CLOSE BUTTON "X" - PREMIUM DISAPPEAR ANIMATION]
+-- [FUNGSI CLOSE BUTTON "X" - PREMIUM IN-PLACE FADE OUT]
 if CloseButton then
     CloseButton.MouseButton1Click:Connect(function()
         if isTweening then return end
@@ -886,9 +885,8 @@ if CloseButton then
         if MiniButton then MiniButton.Visible = false end
         if RestoreButton then RestoreButton.Visible = false end
         
-        -- ANIMASI CLOSE BARU: Menciut secara lembut ke ukuran mikro dibarengi efek Fade Out total
-        local closeTween = TweenService:Create(Panel, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0),
+        -- ANIMASI CLOSE TERBARU: Menghilang halus di tempat (Fade Out) tanpa mengubah ukuran
+        local closeTween = TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             BackgroundTransparency = 1
         })
         
@@ -900,24 +898,29 @@ if CloseButton then
 end
 
 -- -----------------------------------------------------------------------------
--- 4. INTRO EXECUTE ANIMATION (PREMIUM POP-UP CINEMATIC)
+-- 4. INTRO EXECUTE ANIMATION (PREMIUM IN-PLACE FADE-IN FIX)
 -- -----------------------------------------------------------------------------
 if Panel then
-    -- State awal: Panel tak terlihat (ukuran 0) dan transparan total
-    Panel.Size = UDim2.new(0, 0, 0, 0)
+    -- SOLUSI UTMAK: Kunci ukuran Panel langsung di size aslinya sejak awal agar tak merusak rendering child!
+    Panel.Size = ORIGINAL_SIZE
+    
+    -- Buat tak terlihat murni melalui transparansi (Muncul di tempat)
     Panel.BackgroundTransparency = 1
     if ScrollingFrame then ScrollingFrame.Visible = false end
     
-    task.wait(0.05) -- Penundaan mikro untuk memantapkan sinkronisasi render CoreGui
+    task.wait(0.05) -- Jeda mikro stabilitas rendering engine
     
-    -- ANIMASI INTRO BARU: Menggunakan EasingStyle.Back dengan nilai kembalianOut terukur (Efek pop-up memantul elegan)
-    local introTween = TweenService:Create(Panel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = ORIGINAL_SIZE,
+    -- ANIMASI INTRO BARU: Melakukan transisi Fade-In (Memudar masuk) yang sangat elegan langsung di posisi aslinya
+    local introTween = TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         BackgroundTransparency = ORIGINAL_TRANSPARENCY
     })
     
     introTween:Play()
     introTween.Completed:Connect(function()
+        -- Kunci ulang penegasan visibility demi kestabilan absolut
+        MiniButton.Visible = true
+        RestoreButton.Visible = false
+        
         if ScrollingFrame then ScrollingFrame.Visible = true end
     end)
 end
