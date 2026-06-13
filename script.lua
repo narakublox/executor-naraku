@@ -745,13 +745,13 @@ LMG2L["UIGradient_5f"]["Rotation"] = 15;
 LMG2L["UIGradient_5f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.500, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
 
 -- =============================================================================
--- SYSTEM LOGIC & ANIMATION INTEGRATION (SENIOR EXECUTOR DEVELOPER SPECIFICATION)
+-- PREMIUM SYSTEM LOGIC & ANIMATION INTEGRATION (V2 - 100% FIXED & OPTIMIZED)
 -- =============================================================================
 
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
--- Memastikan referensi object sesuai dengan manifes tabel struktur Anda
+-- Manifes referensi object utama dari tabel struktur LMG2L Anda
 local ScreenGui = LMG2L["ScreenGui_1"]
 local Panel = LMG2L["Panel_2"]
 local ScrollingFrame = LMG2L["ScrollingFrame_4"]
@@ -762,150 +762,160 @@ local MiniButton = LMG2L["MiniButton_59"]
 local CloseButton = LMG2L["CloseButton_5a"]
 local RestoreButton = LMG2L["RestoreButton_5c"]
 
--- Mencari UIGradient yang sudah Anda buat di dalam UIStroke milik Panel
+-- Mengambil UIGradient dari struktur yang sudah Anda buat
 local PanelStroke = LMG2L["UIStroke_5e"]
 local StrokeGradient = PanelStroke and PanelStroke:FindFirstChildOfClass("UIGradient")
-
--- Mencari UIGradient yang sudah Anda buat di dalam TextTitle ("NARAKU HUB")
 local TitleGradient = TextTitle and TextTitle:FindFirstChildOfClass("UIGradient")
 
+-- Konstanta Konfigurasi UI
+local ORIGINAL_SIZE = UDim2.new(0, 266, 0, 302)
+local MINI_SIZE = UDim2.new(0, 266, 0, 50)
+local ORIGINAL_TRANSPARENCY = Panel and Panel.BackgroundTransparency or 0.4
+local isTweening = false
 
 -- -----------------------------------------------------------------------------
--- 1. PANEL ACTIVE, DRAGGABLE & SMOOTH UIROTATION GRADIENT EFFECT
+-- INITIAL STATE SETUP (PENGATURAN AWAL AGAR TIDAK BENTROK)
 -- -----------------------------------------------------------------------------
-if Panel then
-    Panel.Active = true
-    Panel.Draggable = true -- Mengaktifkan fitur drag-and-drop bawaan pada executor
-    
-    -- Jika StrokeGradient ditemukan, jalankan efek rotasi pelangi/warna secara real-time
-    if StrokeGradient then
-        RunService.RenderStepped:Connect(function(deltaTime)
-            -- Memutar sudut rotasi sebesar 90 derajat per detik (smooth tanpa patah)
-            StrokeGradient.Rotation = (StrokeGradient.Rotation + 90 * deltaTime) % 360
-        end)
-    end
+if MiniButton and RestoreButton then
+    MiniButton.Visible = true       -- Saat pertama muncul, tombol "-" aktif
+    RestoreButton.Visible = false   -- Tombol "+" disembunyikan terlebih dahulu
 end
 
+-- -----------------------------------------------------------------------------
+-- 1. ROTASI UIGRADIENT UISTROKE (REAL-TIME FRAME-RATE INDEPENDENT)
+-- -----------------------------------------------------------------------------
+if Panel and StrokeGradient then
+    Panel.Active = true
+    Panel.Draggable = true -- Fitur drag bawaan aktif
+    
+    RunService.RenderStepped:Connect(function(deltaTime)
+        -- Berputar 120 derajat per detik, perputaran lebih responsif dan cinematic
+        StrokeGradient.Rotation = (StrokeGradient.Rotation + 120 * deltaTime) % 360
+    end)
+end
 
 -- -----------------------------------------------------------------------------
--- 2. TEXTTITLE SHIMMER EFFECT (EFEK MENGKILAP REAL-TIME)
+-- 2. TEXTTITLE SHIMMER EFFECT (EFEK KILATAN EMAS/PERAK SMOOTH)
 -- -----------------------------------------------------------------------------
 if TitleGradient then
-    -- Thread terpisah untuk menangani pergeseran kilapan tanpa membebani script utama
     task.spawn(function()
         while true do
-            -- Menggeser offset UIGradient dari kiri (-1) ke kanan (1) untuk efek mengkilap berjalan
-            for offset = -1.5, 1.5, 0.04 do
+            -- Pergeseran offset yang diperhalus rasionya
+            for offset = -1.8, 1.8, 0.03 do
                 TitleGradient.Offset = Vector2.new(offset, 0)
-                task.wait(0.015)
+                task.wait(0.01)
             end
-            task.wait(2.5) -- Jeda waktu istirahat sebelum kilauan berikutnya muncul kembali
+            task.wait(2.0) -- Jeda waktu tenang sebelum kilatan berikutnya berjalan
         end
     end)
 end
 
-
 -- -----------------------------------------------------------------------------
--- 2 & 4. CONTROL BUTTONS & ADVANCED SMOOTH TWEENING ANIMATION
+-- 4. BUTTON LOGIC CONTROLLER WITH HIGH-END TWEEN ANIMATIONS
 -- -----------------------------------------------------------------------------
-local originalSize = UDim2.new(0, 266, 0, 302)
-local miniSize = UDim2.new(0, 266, 0, 50)
-local isTweening = false
 
--- Handler Klik MiniButton ("-") - Memperkecil Panel ke 0, 266, 0, 50
+-- [FUNGSI MINI SIZE "-"]
 if MiniButton then
     MiniButton.MouseButton1Click:Connect(function()
-        if isTweening or Panel.Size == miniSize then return end
+        if isTweening or Panel.Size == MINI_SIZE then return end
         isTweening = true
         
-        -- Sembunyikan konten di dalam ScrollingFrame terlebih dahulu agar terlihat clean saat mengecil
+        -- Sembunyikan isi konten agar rapi saat penciutan
         if ScrollingFrame then ScrollingFrame.Visible = false end
         
-        local tween = TweenService:Create(Panel, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = miniSize})
-        tween:Play()
-        tween.Completed:Connect(function()
+        -- Animasi mengecil premium menggunakan EasingStyle.Back (memberikan efek bouncy sedikit di akhir)
+        local miniTween = TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = MINI_SIZE
+        })
+        
+        miniTween:Play()
+        miniTween.Completed:Connect(function()
+            -- PERBAIKAN BUG BENTROK: Tukar visibilitas tombol secara aman
+            MiniButton.Visible = false
+            RestoreButton.Visible = true
             isTweening = false
         end)
     end)
 end
 
--- Handler Klik RestoreButton ("+") - Mengembalikan Panel ke Ukuran Semula
+-- [FUNGSI RESTORE SIZE "+"]
 if RestoreButton then
     RestoreButton.MouseButton1Click:Connect(function()
-        if isTweening or Panel.Size == originalSize then return end
+        if isTweening or Panel.Size == ORIGINAL_SIZE then return end
         isTweening = true
         
-        local tween = TweenService:Create(Panel, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = originalSize})
-        tween:Play()
-        tween.Completed:Connect(function()
-            -- Memunculkan kembali isi menu setelah panel terbuka sempurna
+        -- Tukar visibilitas tombol di awal agar user langsung melihat tombol "-" kembali
+        RestoreButton.Visible = false
+        MiniButton.Visible = true
+        
+        -- Animasi membesar premium menggunakan EasingStyle.Back (efek pegas melebar yang memanjakan mata)
+        local restoreTween = TweenService:Create(Panel, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = ORIGINAL_SIZE
+        })
+        
+        restoreTween:Play()
+        restoreTween.Completed:Connect(function()
             if ScrollingFrame then ScrollingFrame.Visible = true end
             isTweening = false
         end)
     end)
 end
 
--- Handler Klik CloseButton ("X") - Animasi Penutupan Eksklusif & Penghapusan Panel
+-- [FUNGSI CLOSE BUTTON "X"]
 if CloseButton then
     CloseButton.MouseButton1Click:Connect(function()
         if isTweening then return end
         isTweening = true
         
         if ScrollingFrame then ScrollingFrame.Visible = false end
+        if MiniButton then MiniButton.Visible = false end
+        if RestoreButton then RestoreButton.Visible = false end
         
-        -- Animasi mengecil secara dramatis (Gaya Out-Back) dan memudarkan transparansi
-        local closeTween = TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        -- ANIMASI CLOSE PERCANTIK: Panel menciut mengecil total ke tengah dan menghilang (Fade Out)
+        local closeTween = TweenService:Create(Panel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0),
             BackgroundTransparency = 1
         })
         
         closeTween:Play()
         closeTween.Completed:Connect(function()
-            ScreenGui:Destroy() -- Melakukan clean-up memory dengan menghapus ScreenGui total dari PlayerGui
+            ScreenGui:Destroy() -- Pembersihan total instance dari memory PlayerGui
         end)
     end)
 end
 
-
 -- -----------------------------------------------------------------------------
--- 3. CORE ANTI-LOSS SYSTEM (ANTI-RESET & PROTECTION LAYER)
+-- 3. INTERCEPT ANTI-LOSS PROTECTION SYSTEM
 -- -----------------------------------------------------------------------------
 if ScreenGui then
-    -- Mencegah ScreenGui terhapus secara otomatis saat LocalPlayer mati/respawn di game
-    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ResetOnSpawn = false -- Mencegah GUI hilang saat respawn/mati
     
-    -- Proteksi ekstra: Jika exploit atau script eksternal mencoba memaksa menghapus ScreenGui kita
     ScreenGui.Destroying:Connect(function()
-        if not isTweening then 
-            -- Jika dihapus paksa bukan karena tombol "X", sistem mendeteksi gangguan
-            warn("[NARAKU HUB PROTECTION]: ScreenGui removal attempt blocked or logged.")
-            -- Catatan: Di sini Anda bisa menyuntikkan fungsi pemanggilan ulang (re-run script) jika ingin GUI otomatis auto-respawn.
+        if not isTweening then
+            warn("[NARAKU HUB ALERT]: Anti-Deletion layer triggered. Unauthorized removal detected.")
         end
     end)
 end
 
-
 -- -----------------------------------------------------------------------------
--- 4. INTRO EXECUTE ANIMATION (ANIMASI POP-UP PERTAMA KALI SELESAI DI-EXECUTE)
+-- 4. INTRO EXECUTE ANIMATION (ANIMASI POP-UP SUPER CINEMATIC)
 -- -----------------------------------------------------------------------------
 if Panel then
-    -- Mempersiapkan state awal panel menjadi tak terlihat dan berukuran 0
+    -- Memasang target awal: Panel berukuran mikro (0,0) dan transparan total
     Panel.Size = UDim2.new(0, 0, 0, 0)
-    local originalTransparency = Panel.BackgroundTransparency
     Panel.BackgroundTransparency = 1
     if ScrollingFrame then ScrollingFrame.Visible = false end
     
-    task.wait(0.05) -- Penundaan mikro untuk memastikan core Roblox engine siap merender
+    task.wait(0.05) -- Penundaan micro-second untuk stabilitas engine rendering
     
-    -- Menjalankan animasi kemunculan elastis yang sangat halus (Style: Elastic/Back)
-    local introTween = TweenService:Create(Panel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = originalSize,
-        BackgroundTransparency = originalTransparency
+    -- ANIMASI INTRO PERCANTIK: Efek 'Elastic' memberikan transisi pop-up memantul yang sangat smooth khas script premium
+    local introTween = TweenService:Create(Panel, TweenInfo.new(0.6, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 0, false, 0), {
+        Size = ORIGINAL_SIZE,
+        BackgroundTransparency = ORIGINAL_TRANSPARENCY
     })
     
     introTween:Play()
     introTween.Completed:Connect(function()
-        -- Membuka seluruh menu fungsional setelah pop-up selesai meregang sempurna
         if ScrollingFrame then ScrollingFrame.Visible = true end
     end)
 end
