@@ -745,13 +745,14 @@ LMG2L["UIGradient_5f"]["Rotation"] = 15;
 LMG2L["UIGradient_5f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.500, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
 
 -- =============================================================================
--- PREMIUM SYSTEM LOGIC & ANIMATION INTEGRATION (V2 - 100% FIXED & OPTIMIZED)
+-- PREMIUM SYSTEM LOGIC & ANTI-LOSS PROTECTION (100% FIXED & SAFE)
 -- =============================================================================
 
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
 
--- Manifes referensi object utama dari tabel struktur LMG2L Anda
+-- Sinkronisasi manifes tabel struktur LMG2L Anda
 local ScreenGui = LMG2L["ScreenGui_1"]
 local Panel = LMG2L["Panel_2"]
 local ScrollingFrame = LMG2L["ScrollingFrame_4"]
@@ -762,56 +763,69 @@ local MiniButton = LMG2L["MiniButton_59"]
 local CloseButton = LMG2L["CloseButton_5a"]
 local RestoreButton = LMG2L["RestoreButton_5c"]
 
--- Mengambil UIGradient dari struktur yang sudah Anda buat
+-- Mengambil UIGradient dari struktur asli Anda
 local PanelStroke = LMG2L["UIStroke_5e"]
 local StrokeGradient = PanelStroke and PanelStroke:FindFirstChildOfClass("UIGradient")
 local TitleGradient = TextTitle and TextTitle:FindFirstChildOfClass("UIGradient")
 
--- Konstanta Konfigurasi UI
+-- Konstanta Ukuran & Transparansi Sesuai Dokumen UI
 local ORIGINAL_SIZE = UDim2.new(0, 266, 0, 302)
 local MINI_SIZE = UDim2.new(0, 266, 0, 50)
 local ORIGINAL_TRANSPARENCY = Panel and Panel.BackgroundTransparency or 0.4
+
 local isTweening = false
 
 -- -----------------------------------------------------------------------------
--- INITIAL STATE SETUP (PENGATURAN AWAL AGAR TIDAK BENTROK)
+-- STRICT INITIAL STATE (PENGATURAN VISIBLE SEKETIKA AGAR TIDAK MENUMPUK)
 -- -----------------------------------------------------------------------------
 if MiniButton and RestoreButton then
-    MiniButton.Visible = true       -- Saat pertama muncul, tombol "-" aktif
-    RestoreButton.Visible = false   -- Tombol "+" disembunyikan terlebih dahulu
+    MiniButton.Visible = true       -- Hanya menampilkan tombol "-" di awal
+    RestoreButton.Visible = false   -- Mematikan total tombol "+" agar tidak menumpuk
 end
 
 -- -----------------------------------------------------------------------------
--- 1. ROTASI UIGRADIENT UISTROKE (REAL-TIME FRAME-RATE INDEPENDENT)
+-- 1. ROTASI UIGRADIENT UISTROKE (REAL-TIME CINEMATIC ROTATION)
 -- -----------------------------------------------------------------------------
 if Panel and StrokeGradient then
     Panel.Active = true
-    Panel.Draggable = true -- Fitur drag bawaan aktif
+    Panel.Draggable = true -- Mengaktifkan fitur drag bawaan executor
     
     RunService.RenderStepped:Connect(function(deltaTime)
-        -- Berputar 120 derajat per detik, perputaran lebih responsif dan cinematic
+        -- Berputar 120 derajat per detik secara halus tanpa membebani FPS
         StrokeGradient.Rotation = (StrokeGradient.Rotation + 120 * deltaTime) % 360
     end)
 end
 
 -- -----------------------------------------------------------------------------
--- 2. TEXTTITLE SHIMMER EFFECT (EFEK KILATAN EMAS/PERAK SMOOTH)
+-- 2. TEXTTITLE SHIMMER EFFECT (EFEK MENGKILAP REAL-TIME)
 -- -----------------------------------------------------------------------------
 if TitleGradient then
     task.spawn(function()
         while true do
-            -- Pergeseran offset yang diperhalus rasionya
+            -- Pergeseran offset untuk membuat efek kilatan berjalan melintasi teks
             for offset = -1.8, 1.8, 0.03 do
                 TitleGradient.Offset = Vector2.new(offset, 0)
                 task.wait(0.01)
             end
-            task.wait(2.0) -- Jeda waktu tenang sebelum kilatan berikutnya berjalan
+            task.wait(2.0) -- Jeda waktu sebelum kilatan berikutnya muncul kembali
         end
     end)
 end
 
 -- -----------------------------------------------------------------------------
--- 4. BUTTON LOGIC CONTROLLER WITH HIGH-END TWEEN ANIMATIONS
+-- 3. SYSTEM PROTEKSI ANTI-HILANG (PLAY & STOP SAFE TO COREGUI)
+-- -----------------------------------------------------------------------------
+if ScreenGui and ScreenGui:IsA("ScreenGui") then
+    ScreenGui.ResetOnSpawn = false -- Mencegah UI terhapus saat karakter mati/ganti mode
+    
+    -- Pindahkan Parent ke CoreGui agar aman dari sistem rollback JSON Studio Lite
+    pcall(function()
+        ScreenGui.Parent = CoreGui
+    end)
+end
+
+-- -----------------------------------------------------------------------------
+-- 4. CONTROL BUTTONS & HIGH-END SMOOTH TWEENING ANIMATIONS
 -- -----------------------------------------------------------------------------
 
 -- [FUNGSI MINI SIZE "-"]
@@ -820,19 +834,20 @@ if MiniButton then
         if isTweening or Panel.Size == MINI_SIZE then return end
         isTweening = true
         
-        -- Sembunyikan isi konten agar rapi saat penciutan
+        -- FIX INSTANT VISIBLE: Tukar visibilitas tombol di awal klik tanpa delay tweening
+        MiniButton.Visible = false
+        RestoreButton.Visible = true
+        
+        -- Sembunyikan isi menu agar transisi mengecil nampak bersih
         if ScrollingFrame then ScrollingFrame.Visible = false end
         
-        -- Animasi mengecil premium menggunakan EasingStyle.Back (memberikan efek bouncy sedikit di akhir)
-        local miniTween = TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        -- Animasi mengecil premium menggunakan EasingStyle.Exponential (sangat smooth)
+        local miniTween = TweenService:Create(Panel, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
             Size = MINI_SIZE
         })
         
         miniTween:Play()
         miniTween.Completed:Connect(function()
-            -- PERBAIKAN BUG BENTROK: Tukar visibilitas tombol secara aman
-            MiniButton.Visible = false
-            RestoreButton.Visible = true
             isTweening = false
         end)
     end)
@@ -844,12 +859,12 @@ if RestoreButton then
         if isTweening or Panel.Size == ORIGINAL_SIZE then return end
         isTweening = true
         
-        -- Tukar visibilitas tombol di awal agar user langsung melihat tombol "-" kembali
+        -- FIX INSTANT VISIBLE: Kembalikan visibilitas tombol "-" seketika
         RestoreButton.Visible = false
         MiniButton.Visible = true
         
-        -- Animasi membesar premium menggunakan EasingStyle.Back (efek pegas melebar yang memanjakan mata)
-        local restoreTween = TweenService:Create(Panel, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        -- Animasi membesar menggunakan kurva Exponential Out yang mewah dan responsif
+        local restoreTween = TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
             Size = ORIGINAL_SIZE
         })
         
@@ -861,7 +876,7 @@ if RestoreButton then
     end)
 end
 
--- [FUNGSI CLOSE BUTTON "X"]
+-- [FUNGSI CLOSE BUTTON "X" - PREMIUM DISAPPEAR ANIMATION]
 if CloseButton then
     CloseButton.MouseButton1Click:Connect(function()
         if isTweening then return end
@@ -871,45 +886,32 @@ if CloseButton then
         if MiniButton then MiniButton.Visible = false end
         if RestoreButton then RestoreButton.Visible = false end
         
-        -- ANIMASI CLOSE PERCANTIK: Panel menciut mengecil total ke tengah dan menghilang (Fade Out)
-        local closeTween = TweenService:Create(Panel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        -- ANIMASI CLOSE BARU: Menciut secara lembut ke ukuran mikro dibarengi efek Fade Out total
+        local closeTween = TweenService:Create(Panel, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0),
             BackgroundTransparency = 1
         })
         
         closeTween:Play()
         closeTween.Completed:Connect(function()
-            ScreenGui:Destroy() -- Pembersihan total instance dari memory PlayerGui
+            ScreenGui:Destroy() -- Melakukan clean-up memori dari CoreGui
         end)
     end)
 end
 
 -- -----------------------------------------------------------------------------
--- 3. INTERCEPT ANTI-LOSS PROTECTION SYSTEM
--- -----------------------------------------------------------------------------
-if ScreenGui then
-    ScreenGui.ResetOnSpawn = false -- Mencegah GUI hilang saat respawn/mati
-    
-    ScreenGui.Destroying:Connect(function()
-        if not isTweening then
-            warn("[NARAKU HUB ALERT]: Anti-Deletion layer triggered. Unauthorized removal detected.")
-        end
-    end)
-end
-
--- -----------------------------------------------------------------------------
--- 4. INTRO EXECUTE ANIMATION (ANIMASI POP-UP SUPER CINEMATIC)
+-- 4. INTRO EXECUTE ANIMATION (PREMIUM POP-UP CINEMATIC)
 -- -----------------------------------------------------------------------------
 if Panel then
-    -- Memasang target awal: Panel berukuran mikro (0,0) dan transparan total
+    -- State awal: Panel tak terlihat (ukuran 0) dan transparan total
     Panel.Size = UDim2.new(0, 0, 0, 0)
     Panel.BackgroundTransparency = 1
     if ScrollingFrame then ScrollingFrame.Visible = false end
     
-    task.wait(0.05) -- Penundaan micro-second untuk stabilitas engine rendering
+    task.wait(0.05) -- Penundaan mikro untuk memantapkan sinkronisasi render CoreGui
     
-    -- ANIMASI INTRO PERCANTIK: Efek 'Elastic' memberikan transisi pop-up memantul yang sangat smooth khas script premium
-    local introTween = TweenService:Create(Panel, TweenInfo.new(0.6, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 0, false, 0), {
+    -- ANIMASI INTRO BARU: Menggunakan EasingStyle.Back dengan nilai kembalianOut terukur (Efek pop-up memantul elegan)
+    local introTween = TweenService:Create(Panel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = ORIGINAL_SIZE,
         BackgroundTransparency = ORIGINAL_TRANSPARENCY
     })
