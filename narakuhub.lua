@@ -891,188 +891,206 @@ LMG2L["UIGradient_71"] = Instance.new("UIGradient", LMG2L["CloseButton_6f"]);
 LMG2L["UIGradient_71"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(173, 0, 0)),ColorSequenceKeypoint.new(0.500, Color3.fromRGB(246, 0, 0)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(176, 0, 0))};
 
 -- =============================================================================
--- ROBLOX EXECUTOR SENIOR INTERACTION SCRIPT - FIXED HIERARCHY VERSION
--- =============================================================================
-
+-- Services
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- =============================================================================
--- PILAR UTAMA: ANTI-HILANG SYSTEM (ANTI-RESET & PROTECTION LAYER)
--- =============================================================================
-local ScreenGui = LMG2L["ScreenGui_1"]
+-- Pastikan tabel LMG2L dari UI Converter Anda sudah terdefinisi di atas script ini.
+-- Jika tidak ditemukan, script ini akan menunggu tabel tersedia agar tidak memicu error.
+assert(LMG2L, "Error: Tabel objek UI LMG2L tidak ditemukan! Pastikan script ditaruh di bawah UI Code.")
 
-if ScreenGui then
-    -- Mencegah UI hancur saat pemain mati / respawn di dalam game
-    ScreenGui.ResetOnSpawn = false
-    
-    -- Memindahkan lokasi penyimpanan UI ke storage aman milik Executor
-    local TargetStorage = nil
-    if gethui then
-        TargetStorage = gethui()
-    elseif syn and syn.protect_gui then
-        syn.protect_gui(ScreenGui)
-        TargetStorage = CoreGui
-    elseif CoreGui:FindFirstChild("RobloxGui") then
-        TargetStorage = CoreGui:FindFirstChild("RobloxGui")
-    else
-        TargetStorage = LocalPlayer:WaitForChild("PlayerGui")
-    end
-    
-    if TargetStorage and ScreenGui.Parent ~= TargetStorage then
-        ScreenGui.Parent = TargetStorage
+-- 1. SYSTEM ANTI-HILANG & PROTEKSI SCREENGUI
+local targetGuiName = LMG2L["ScreenGui_1"].Name or "ScreenGui_1"
+
+-- Cari dan hapus GUI lama jika ada duplikasi di PlayerGui atau CoreGui (Proteksi Re-execute)
+local function CleanupOldGui(parent)
+    if parent then
+        local oldGui = parent:FindFirstChild(targetGuiName)
+        if oldGui then oldGui:Destroy() end
     end
 end
+CleanupOldGui(PlayerGui)
+if gethui then CleanupOldGui(gethui()) end -- Proteksi khusus Synapse/Seniors Executor
 
--- =============================================================================
--- DEKLARASI REFERENSI VARIABEL BERDASARKAN INDEKS ASLI LOCALMAZE
--- =============================================================================
+-- Set properti anti-hilang saat karakter respawn
+LMG2L["ScreenGui_1"].ResetOnSpawn = false
+
+-- 2. INITIALIZATION STATE (SETTING AWAL & PENCARIAN ELEMEN)
 local MainPanel = LMG2L["Panel_3"]
-local ScrollingFrame = LMG2L["ScrollingFrame_5"]
-
--- Komponen Header Sesuai Pasangan Nama Instansi Asli Dokumen Anda
-local MiniRestoreButton = LMG2L["MiniRestoreButton_4"] -- Tombol "-" / "+"
-local MainCloseButton = LMG2L["CloseButton_4"]         -- Tombol "X" Utama
-local TitleLabel = LMG2L["TitleTextLabel_4"]           -- Teks "NARAKU HUB"
-
--- Komponen Panel Konfirmasi Keluar Beserta Isinya
+local ContentFrame = LMG2L["ScrollingFrame_5"]
 local ConfirmPanel = LMG2L["PanelConfrim_62"]
-local CancelButton = LMG2L["CancelButton_6a"]
-local CloseConfirmButton = LMG2L["CloseButton_6f"]
 
--- Pastikan Panel Konfirmasi Sembunyi Sempurna Saat Pertama Kali UI Dieksekusi
-if ConfirmPanel then
-    ConfirmPanel.Visible = false
-    ConfirmPanel.Size = UDim2.new(0, 0, 0, 0)
+-- Deteksi otomatis/fallback elemen Top Bar berdasarkan hierarki atau tipe objek
+local CloseMainBtn = MainPanel:FindFirstChild("CloseMainBtn") or MainPanel:FindFirstChildOfClass("TextButton") or MainPanel:FindFirstChildOfClass("ImageButton")
+local MiniRestoreBtn = MainPanel:FindFirstChild("MiniRestoreBtn") or (CloseMainBtn and CloseMainBtn.Parent:FindFirstChild("MiniRestoreButton")) 
+local TextTitle = MainPanel:FindFirstChild("TextTitle") or MainPanel:FindFirstChildOfClass("TextLabel")
+
+-- Jika pencarian otomatis gagal, silakan sesuaikan string indeks manual di bawah ini:
+-- CloseMainBtn = LMG2L["Nama_Tombol_Close_Anda"]
+-- MiniRestoreBtn = LMG2L["Nama_Tombol_Mini_Anda"]
+
+-- Menyembunyikan Confirm Panel secara eksplisit saat awal
+ConfirmPanel.Visible = false
+ConfirmPanel.Size = UDim2.new(0, 0, 0, 0) -- Untuk animasi pop-up nantinya
+
+-- Mengatur AnchorPoint agar posisi penskalaan (Pop-up) tepat berada di tengah
+MainPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+MainPanel.Position = UDim2.new(0.5, 0, 0.5, 0)
+
+-- Tabel penampung koneksi agar terhindar dari Memory Leak saat GUI di-destroy
+local JanitorConnections = {}
+
+local function DisconnectAll()
+    for _, connection in pairs(JanitorConnections) do
+        if connection then connection:Disconnect() end
+    end
+    table.clear(JanitorConnections)
 end
 
--- =============================================================================
--- 1. SYSTEM PANEL DRAG (Menggunakan Properti Bawaan Engine Roblox)
--- =============================================================================
-if MainPanel then
-    -- Memanfaatkan API Draggable bawaan Roblox engine sesuai dengan instruksi fungsionalitas
-    MainPanel.Draggable = true
-    MainPanel.Active = true
+-- 3. SYSTEM PANEL DRAG (DRAGGABLE MULTI-PLATFORM)
+local dragToggle = false
+local dragStart = nil
+local startPos = nil
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    TweenService:Create(MainPanel, TweenInfo.new(0.1, Enum.EasingStyle.Out, Enum.EasingDirection.Quart), {Position = position}):Play()
 end
 
--- =============================================================================
--- 2. SYSTEM MINI / RESTORE BUTTON (Toggle Ukuran Panel & Visibilitas Konten)
--- =============================================================================
-if MiniRestoreButton and ScrollingFrame and MainPanel then
-    local isMinimized = false
-    local originalSize = UDim2.new(0, 266, 0, 302)
-    local minimizedSize = UDim2.new(0, 266, 0, 50) -- Menyusut sebatas area bar header atas
-    local miniTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-
-    MiniRestoreButton.MouseButton1Click:Connect(function()
-        if not isMinimized then
-            -- Aksi Klik "-": Ubah ke kondisi Mini size, ganti teks, dan sembunyikan isi ScrollingFrame
-            isMinimized = true
-            MiniRestoreButton.Text = "+"
-            ScrollingFrame.Visible = false
-            TweenService:Create(MainPanel, miniTweenInfo, {Size = minimizedSize}):Play()
-        else
-            -- Aksi Klik "+": Kembalikan ke ukuran penuh semula dan tampilkan isi ScrollingFrame lagi
-            isMinimized = false
-            MiniRestoreButton.Text = "-"
-            local restoreTween = TweenService:Create(MainPanel, miniTweenInfo, {Size = originalSize})
-            restoreTween:Play()
-            restoreTween.Completed:Connect(function()
-                if not isMinimized then
-                    ScrollingFrame.Visible = true
-                end
-            end)
-        end
-    end)
-end
-
--- =============================================================================
--- 3 & 4. SYSTEM CLOSE, PANEL KONFIRMASI, DAN TWEEN ANIMASI KELUAR UI
--- =============================================================================
-if MainCloseButton and ConfirmPanel then
-    MainCloseButton.MouseButton1Click:Connect(function()
-        -- Klik "X" Utama: Munculkan PanelConfirm dengan animasi pop-up membesar elastis (Back Out)
-        ConfirmPanel.Size = UDim2.new(0, 0, 0, 0)
-        ConfirmPanel.Visible = true
-        TweenService:Create(ConfirmPanel, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 258, 0, 100)
-        }):Play()
-    end)
-end
-
-if CancelButton and ConfirmPanel then
-    CancelButton.MouseButton1Click:Connect(function()
-        -- Klik CANCEL: Tutup dan sembunyikan kembali PanelConfirm ke ukuran semula (Batal Keluar)
-        local cancelTween = TweenService:Create(ConfirmPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
-        cancelTween:Play()
-        cancelTween.Completed:Connect(function()
-            ConfirmPanel.Visible = false
-        end)
-    end)
-end
-
-if CloseConfirmButton and ConfirmPanel and MainPanel then
-    CloseConfirmButton.MouseButton1Click:Connect(function()
-        -- Klik CLOSE Konfirmasi: Sembunyikan panel konfirmasi, ciutkan MainPanel hingga habis, lalu hapus GUI total
-        ConfirmPanel.Visible = false
-        local closeTween = TweenService:Create(MainPanel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0)
-        })
-        closeTween:Play()
-        closeTween.Completed:Connect(function()
-            if ScreenGui then
-                ScreenGui:Destroy()
+table.insert(JanitorConnections, MainPanel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragToggle = true
+        dragStart = input.Position
+        startPos = MainPanel.Position
+        
+        local dragConnection
+        dragConnection = input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragToggle = false
+                dragConnection:Disconnect()
             end
         end)
-    end)
+    end
+end))
+
+table.insert(JanitorConnections, UserInputService.InputChanged:Connect(function(input)
+    if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updateInput(input)
+    end
+end))
+
+-- 4. SYSTEM MINI / RESTORE BUTTON
+local isMinimized = false
+local defaultSize = UDim2.new(0, 266, 0, 302)
+local minimizedSize = UDim2.new(0, 266, 0, 50)
+
+if MiniRestoreBtn then
+    MiniRestoreBtn.Text = "-"
+    table.insert(JanitorConnections, MiniRestoreBtn.MouseButton1Click:Connect(function()
+        if not isMinimized then
+            -- Proses Mengecilkan (Mini)
+            local tween = TweenService:Create(MainPanel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = minimizedSize})
+            tween:Play()
+            ContentFrame.Visible = false
+            MiniRestoreBtn.Text = "+"
+            isMinimized = true
+        else
+            -- Proses Membesarkan (Restore)
+            local tween = TweenService:Create(MainPanel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = defaultSize})
+            tween:Play()
+            tween.Completed:Wait()
+            if not isMinimized then -- Double check jika player melakukan spam klik
+                ContentFrame.Visible = true
+            end
+            MiniRestoreBtn.Text = "-"
+            isMinimized = false
+        end
+    end))
 end
 
--- =============================================================================
--- 4. ANIMASI INTERAKSI KEMUNCULAN (TWEENING APPEARANCE SAAT EXECUTE)
--- =============================================================================
-if MainPanel then
-    -- Efek Pop-up pembukaan UI: Skala tinggi naik secara elastis dari 0 menuju ukuran penuh 302
-    local targetSize = UDim2.new(0, 266, 0, 302)
-    MainPanel.Size = UDim2.new(0, 266, 0, 0)
-    TweenService:Create(MainPanel, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = targetSize
-    }):Play()
+-- 5. SYSTEM CLOSE & PANEL CONFIRMATION
+if CloseMainBtn then
+    table.insert(JanitorConnections, CloseMainBtn.MouseButton1Click:Connect(function()
+        ConfirmPanel.Visible = true
+        ConfirmPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+        ConfirmPanel.Position = UDim2.new(0.5, 0, 0.5, 0)
+        TweenService:Create(ConfirmPanel, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 200, 0, 100)}):Play() -- Sesuaikan ukuran Confirm Panel Anda di sini
+    end))
 end
 
--- =============================================================================
--- 5. EFEK ROTASI CHROMA (Sesuai Instansi UIGradient Pada Bingkai UIStroke_c)
--- =============================================================================
--- Memanggil instansi asli LMG2L["UIGradient_d"] yang terletak di dalam Stroke Bingkai Utama
-local TargetGradient = LMG2L["UIGradient_d"]
-
-if TargetGradient and TargetGradient:IsA("UIGradient") then
-    local currentRotation = 0
-    RunService.RenderStepped:Connect(function(deltaTime)
-        -- Menggerakkan putaran warna gradient bingkai luar secara konstan 90 derajat/detik
-        currentRotation = (currentRotation + (90 * deltaTime)) % 360
-        TargetGradient.Rotation = currentRotation
-    end)
+-- Tombol Cancel di dalam Confirm Panel
+if LMG2L["CancelButton_6a"] then
+    table.insert(JanitorConnections, LMG2L["CancelButton_6a"].MouseButton1Click:Connect(function()
+        local tween = TweenService:Create(ConfirmPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+        tween:Play()
+        tween.Completed:Wait()
+        ConfirmPanel.Visible = false
+    end))
 end
 
--- =============================================================================
--- 6. EFEK MENGKILAP TEXT TITLE (Sesuai Instansi UIGradient_5 Di Bawah Judul)
--- =============================================================================
--- Memanggil instansi asli LMG2L["UIGradient_5"] yang melekat pada TitleTextLabel_4 Anda
-local TitleGradient = LMG2L["UIGradient_5"]
-
-if TitleGradient and TitleGradient:IsA("UIGradient") then
-    TitleGradient.Offset = Vector2.new(-1, 0)
-    
-    -- Loop interpolasi tak terbatas (-1) untuk menggeser posisi offset guna menciptakan efek kilauan linear melintasi teks
-    local shineTween = TweenService:Create(TitleGradient, TweenInfo.new(2.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, false, 0), {
-        Offset = Vector2.new(1, 0)
-    })
-    shineTween:Play()
+-- Tombol Close utama di dalam Confirm Panel (Penutupan Permanen)
+if LMG2L["CloseButton_6f"] then
+    table.insert(JanitorConnections, LMG2L["CloseButton_6f"].MouseButton1Click:Connect(function()
+        -- Animasi penutupan Main Panel secara berbarengan
+        ConfirmPanel.Visible = false
+        local closeTween = TweenService:Create(MainPanel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+        closeTween:Play()
+        closeTween.Completed:Wait()
+        
+        -- Memutus seluruh event loop untuk mencegah kebocoran memori (Memory Leak)
+        DisconnectAll()
+        LMG2L["ScreenGui_1"]:Destroy()
+    end))
 end
+
+-- 6. ANIMASI APPEARANCE (KEMUNCULAN PERTAMA)
+MainPanel.Size = UDim2.new(0, 0, 0, 0)
+local appearanceTween = TweenService:Create(MainPanel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = defaultSize})
+appearanceTween:Play()
+
+-- 7. EFEK VISUAL DINGIN (ROTATING GRADIENT & SHINE TEXT)
+
+-- A. Efek Rotasi UIGradient pada Border / Stroke Panel
+local uiStroke = MainPanel:FindFirstChildOfClass("UIStroke") or MainPanel:FindFirstChild("UIStroke")
+local targetGradient = uiStroke and uiStroke:FindFirstChildOfClass("UIGradient")
+
+if targetGradient then
+    local rotationSpeed = 90 -- Derajat per detik
+    table.insert(JanitorConnections, RunService.RenderStepped:Connect(function(deltaTime)
+        if targetGradient and targetGradient.Parent then
+            targetGradient.Rotation = (targetGradient.Rotation + (rotationSpeed * deltaTime)) % 360
+        end
+    end))
+end
+
+-- B. Efek Mengkilap Text Title (Shine Effect)
+if TextTitle then
+    local titleGradient = TextTitle:FindFirstChildOfClass("UIGradient")
+    if titleGradient then
+        task.spawn(function()
+            -- Mengamankan loop tak terbatas agar bisa berhenti total saat GUI hancur
+            while MainPanel and MainPanel.Parent do
+                titleGradient.Offset = Vector2.new(-1, 0)
+                local shineTween = TweenService:Create(titleGradient, TweenInfo.new(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {Offset = Vector2.new(1, 0)})
+                shineTween:Play()
+                shineTween.Completed:Wait()
+                task.wait(3) -- Jeda waktu kilatan (detik) sebelum mengkilap kembali
+            end
+        end)
+    end
+end
+
+-- Otomatisasi pembersihan koneksi jika UI dihancurkan pihak luar
+table.insert(JanitorConnections, LMG2L["ScreenGui_1"].AncestryChanged:Connect(function(_, parent)
+    if not parent then
+        DisconnectAll()
+    end
+end))
         
 return LMG2L["ScreenGui_1"], require;
